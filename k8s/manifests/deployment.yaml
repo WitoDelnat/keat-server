@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keat-server
+  labels:
+    app: keat-server
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: keat-server
+  template:
+    metadata:
+      labels:
+        app: keat-server
+    spec:
+      serviceAccountName: keat-server
+      containers:
+        - name: keat-server
+          image: gcr.io/keatproj/keat-server
+          ports:
+            - name: http-web
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http-web
+            initialDelaySeconds: 15
+          resources:
+            requests:
+              cpu: 150m
+              memory: 200Mi
+            limits:
+              cpu: 300m
+              memory: 400Mi

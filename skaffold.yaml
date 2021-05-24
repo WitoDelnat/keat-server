@@ -1,0 +1,11 @@
+apiVersion: skaffold/v2beta6
+kind: Config
+metadata:
+  name: api
+build:
+  artifacts:
+    - image: keat
+deploy:
+  kustomize:
+    paths:
+      - k8s/example

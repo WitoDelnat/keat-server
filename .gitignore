@@ -1,0 +1,5 @@
+k8s/example/**
+config/local*
+dist/**
+node_modules/**
+yarn-error.log
