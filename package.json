@@ -20,7 +20,7 @@
     "fastify-prettier": "1.1.7",
     "fastify-sensible": "3.1.1",
     "js-yaml": "4.1.0",
-    "keat-node": "0.2.0",
+    "keat-node": "0.3.0",
     "node-fetch": "2.6.1",
     "node-graceful": "3.0.1",
     "pino": "6.11.3",
@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@types/config": "0.0.38",
+    "@types/lodash": "4.14.170",
     "@types/node": "15.0.1",
     "@types/node-fetch": "2.5.10",
     "@types/pino": "6.3.8",
@@ -37,6 +38,6 @@
     "@typescript-eslint/parser": "4.22.0",
     "eslint": "7.25.0",
     "prettier": "2.2.1",
-    "ts-node-dev": "^1.1.6"
+    "ts-node-dev": "1.1.6"
   }
 }

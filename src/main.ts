@@ -15,7 +15,7 @@ let keat: Keat;
   if (config.keat) {
     keat = Keat.fromDefinitions({ definitions: config.keat, logger });
   } else {
-    keat = await Keat.fromKubernetes({ logger });
+    keat = Keat.fromKubernetes({ logger });
     await keat.ready;
   }
 
