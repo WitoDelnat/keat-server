@@ -4,3 +4,4 @@ scripts/**
 k8s/**
 node_modules/**
 yarn-error.log
+docs/**

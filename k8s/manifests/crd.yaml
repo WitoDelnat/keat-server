@@ -1,69 +1,21 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: features.keat.io
+  name: applications.keat.io
 spec:
   scope: Namespaced
   group: keat.io
   names:
-    kind: Feature
-    listKind: FeatureList
-    singular: feature
-    plural: features
+    kind: Application
+    listKind: ApplicationList
+    singular: application
+    plural: applications
     shortNames:
-      - feat
-      - feats
+      - app
+      - apps
   preserveUnknownFields: false
   versions:
-    - name: v1alpha1
-      served: true
-      storage: true
-      additionalPrinterColumns:
-        - name: Enabled
-          type: boolean
-          jsonPath: .spec.enabled
-      schema:
-        openAPIV3Schema:
-          type: object
-          properties:
-            apiVersion:
-              type: string
-            kind:
-              type: string
-            metadata:
-              type: object
-            spec:
-              type: object
-              properties:
-                enabled:
-                  type: boolean
-                audiences:
-                  type: array
-                  items:
-                    type: string
-              required:
-                - enabled
-            status:
-              type: object
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  name: audiences.keat.io
-spec:
-  scope: Namespaced
-  group: keat.io
-  names:
-    kind: Audience
-    listKind: AudienceList
-    singular: audience
-    plural: audiences
-    shortNames:
-      - aud
-      - auds
-  preserveUnknownFields: false
-  versions:
-    - name: v1alpha1
+    - name: v1alpha2
       served: true
       storage: true
       schema:
@@ -71,18 +23,5 @@ spec:
           type: object
           properties:
             spec:
-              type: object
-              properties:
-                kind:
-                  type: string
-                  enum: ["static", "random"]
-                members:
-                  type: array
-                  items:
-                    type: string
-                percentage:
-                  type: number
-              required:
-                - kind
-            status:
+              x-kubernetes-preserve-unknown-fields: true
               type: object

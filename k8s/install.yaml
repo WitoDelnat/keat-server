@@ -2,90 +2,27 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: audiences.keat.io
+  name: applications.keat.io
 spec:
   group: keat.io
   names:
-    kind: Audience
-    listKind: AudienceList
-    plural: audiences
+    kind: Application
+    listKind: ApplicationList
+    plural: applications
     shortNames:
-    - aud
-    - auds
-    singular: audience
+    - app
+    - apps
+    singular: application
   preserveUnknownFields: false
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - name: v1alpha2
     schema:
       openAPIV3Schema:
         properties:
           spec:
-            properties:
-              kind:
-                enum:
-                - static
-                - random
-                type: string
-              members:
-                items:
-                  type: string
-                type: array
-              percentage:
-                type: number
-            required:
-            - kind
             type: object
-          status:
-            type: object
-        type: object
-    served: true
-    storage: true
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  name: features.keat.io
-spec:
-  group: keat.io
-  names:
-    kind: Feature
-    listKind: FeatureList
-    plural: features
-    shortNames:
-    - feat
-    - feats
-    singular: feature
-  preserveUnknownFields: false
-  scope: Namespaced
-  versions:
-  - additionalPrinterColumns:
-    - jsonPath: .spec.enabled
-      name: Enabled
-      type: boolean
-    name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        properties:
-          apiVersion:
-            type: string
-          kind:
-            type: string
-          metadata:
-            type: object
-          spec:
-            properties:
-              audiences:
-                items:
-                  type: string
-                type: array
-              enabled:
-                type: boolean
-            required:
-            - enabled
-            type: object
-          status:
-            type: object
+            x-kubernetes-preserve-unknown-fields: true
         type: object
     served: true
     storage: true
@@ -103,8 +40,7 @@ rules:
 - apiGroups:
   - keat.io
   resources:
-  - audiences
-  - features
+  - applications
   verbs:
   - get
   - list

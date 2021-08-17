@@ -4,8 +4,8 @@ metadata:
   name: api
 build:
   artifacts:
-    - image: keat
+    - image: gcr.io/keatproj/keat-server
 deploy:
-  kustomize:
-    paths:
-      - k8s/example
+  kubectl:
+    manifests:
+      - k8s/install.yaml

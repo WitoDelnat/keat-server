@@ -1,15 +1,15 @@
 import { FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
-import { Keat } from "keat-node";
+import { ApplicationService } from "../modules/applications/ApplicationService";
 
 declare module "fastify" {
   interface FastifyInstance {
-    keat: Keat;
+    applications: ApplicationService;
   }
 }
 
 type DependenciesOptions = {
-  keat: Keat;
+  applications: ApplicationService;
 };
 
 export default fp(
@@ -18,7 +18,7 @@ export default fp(
     options: DependenciesOptions,
     done: () => void
   ) => {
-    fastify.decorate("keat", options.keat);
+    fastify.decorate("applications", options.applications);
 
     done();
   },
