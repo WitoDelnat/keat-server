@@ -2,8 +2,7 @@ import { FastifyInstance } from "fastify";
 import Graceful from "node-graceful";
 import { config } from "./config";
 import { ApplicationService } from "./modules/applications/ApplicationService";
-import { KubeClient } from "./modules/backend/kubernetes/KubeClient";
-import { PollingKubernetesSynchronizer } from "./modules/backend/kubernetes/KubeSynchronizer";
+import { KubeClient, WatchingKubernetesSynchronizer } from "./modules/backend";
 import { routes } from "./routes";
 import { createServer } from "./server/createServer";
 import { logger } from "./utils/logger";
@@ -14,14 +13,13 @@ let server: FastifyInstance;
   logger.info("Bootstrapping..");
   const applications = new ApplicationService();
   const kubeClient = KubeClient.fromConfig();
-  const synchronizer = new PollingKubernetesSynchronizer(
+  const synchronizer = new WatchingKubernetesSynchronizer(
     kubeClient,
     applications
   );
 
   logger.info("Synchronizing..");
-  synchronizer.start();
-  await synchronizer.ready;
+  await synchronizer.start();
 
   logger.info("Starting server..");
   server = createServer({ routes, applications });

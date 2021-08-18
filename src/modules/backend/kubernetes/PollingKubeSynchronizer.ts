@@ -1,7 +1,7 @@
 import { Synchronizer } from "../synchronizer";
 import { Signal } from "../../../utils/signal";
 import { delay } from "../../../utils/delay";
-import { KubeClient } from "./KubeClient";
+import { KubeClient, KubeWatchStop } from "./KubeClient";
 import { ApplicationService } from "../../applications/ApplicationService";
 import { AbortController, AbortSignal } from "abort-controller";
 import { logger } from "../../../utils/logger";
@@ -18,14 +18,11 @@ export class PollingKubernetesSynchronizer implements Synchronizer {
     private applications: ApplicationService
   ) {}
 
-  get ready() {
-    return this._signal.promise;
-  }
-
-  start() {
+  async start() {
     this._abortController.abort();
     this._abortController = new AbortController();
     this._task = this.syncInBackground(this._abortController.signal);
+    return this._signal.promise;
   }
 
   async stop() {
