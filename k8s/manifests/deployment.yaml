@@ -19,7 +19,6 @@ spec:
       containers:
         - name: keat-server
           image: gcr.io/keatproj/keat-server
-          imagePullPolicy: Never
           ports:
             - name: http-web
               containerPort: 8080
