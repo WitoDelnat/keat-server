@@ -1,5 +1,20 @@
 # # # # # # # # # # # # # # # #
-# BUILDER
+# BUILDER - UI
+# # # # # # # # # # # # # # # #
+FROM node:14-slim AS builder-ui
+WORKDIR /build
+
+COPY ui/package.json ui/yarn.lock ui/
+RUN cd ui && yarn install --frozen-lockfile
+
+COPY server/package.json server/yarn.lock server/
+RUN cd server && yarn install --frozen-lockfile
+
+COPY . .
+RUN cd ui && yarn build
+
+# # # # # # # # # # # # # # # #
+# BUILDER - SERVER
 # # # # # # # # # # # # # # # #
 FROM node:14-slim AS builder-server
 WORKDIR /build
