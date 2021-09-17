@@ -4,7 +4,7 @@ Keat is the Kubernetes-native feature management tool.
 
 **Problem:** "I want to increase my deployment frequency while keeping control of my stability."
 
-**Solution:** Put your new code behind feature flags, which is safe to deploy - even when it's still an ongoing effort. Afterwards gradually increase the reach and recover from failures within minutes.
+**Solution:** Put your new code behind feature flags, which is safe to deploy. Afterwards gradually increase the reach and recover from failures within minutes.
 
 ## Installation
 
@@ -29,7 +29,7 @@ metadata:
   name: demo
 spec:
   search: "everyone"
-  chatbot: ["staff", "dark-xs"]
+  chatbot: ["staff", 25]
 ```
 
 Apply it:

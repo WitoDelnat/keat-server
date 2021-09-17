@@ -1,13 +1,13 @@
 # # # # # # # # # # # # # # # #
 # BUILDER
 # # # # # # # # # # # # # # # #
-FROM node:14-slim AS builder
+FROM node:14-slim AS builder-server
 WORKDIR /build
 
-COPY package.json yarn.lock ./
+COPY server/package.json server/yarn.lock ./
 RUN yarn install --frozen-lockfile
 
-COPY . .
+COPY server .
 RUN yarn build
 
 # # # # # # # # # # # # # # # #
@@ -18,11 +18,12 @@ WORKDIR /app
 
 ENV YARN_CACHE_FOLDER /app/cache
 
-COPY package.json yarn.lock ./
+COPY server/package.json server/yarn.lock ./
 RUN yarn install --production --frozen-lockfile && yarn cache clean
 
-COPY --from=builder /build/dist ./dist
-COPY config ./config
+COPY --from=builder-server /build/dist ./dist
+COPY --from=builder-ui /build/ui/build ./public
+COPY server/config ./config
 
 ENV NODE_ENV=production
 
