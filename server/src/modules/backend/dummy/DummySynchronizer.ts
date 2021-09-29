@@ -19,6 +19,17 @@ export class DummySynchronizer implements Synchronizer {
   }
 
   async push(app: ServerApp) {
-    return;
+    this.applications.registerServer(app);
+  }
+
+  async deleteApplication(name: string): Promise<void> {
+    this.applications.unregisterServer(name);
+  }
+
+  async createApplication(name: string): Promise<void> {
+    this.applications.registerServer({
+      name,
+      features: {},
+    });
   }
 }

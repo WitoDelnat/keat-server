@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router';
 import { FeatureCard } from '../components/FeatureCard';
 import { Layout } from '../components/Layout';
-import { ToggleModal } from '../components/ToggleModal';
+import { ToggleModal } from '../components/FeatureToggleModal';
 import { trpc } from '../utils/trpc';
 import type { Feature } from '../utils/types';
 import { ApplicationNotFoundPage } from './ApplicationNotFound';

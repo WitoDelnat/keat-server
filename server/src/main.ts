@@ -4,7 +4,6 @@ import { appRouter } from "./admin";
 import { config } from "./config";
 import { ApplicationService } from "./modules/applications/ApplicationService";
 import { createSynchronizer } from "./modules/backend";
-import { DummySynchronizer } from "./modules/backend/dummy/DummySynchronizer";
 import { routes } from "./proxy/routes";
 import { createServer } from "./server/createServer";
 import { logger } from "./utils/logger";
@@ -14,7 +13,7 @@ let server: FastifyInstance;
 (async function main() {
   logger.info("Bootstrapping..");
   const applications = new ApplicationService();
-  const synchronizer = createSynchronizer("in-memory", applications);
+  const synchronizer = createSynchronizer(config.synchronizer, applications);
 
   logger.info("Synchronizing..");
   await synchronizer.start();

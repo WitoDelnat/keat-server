@@ -19,9 +19,11 @@ import {
   Text,
   useBreakpointValue,
 } from '@chakra-ui/react';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { isNumber, isString, startCase } from 'lodash';
 import React, { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { trpc } from '../utils/trpc';
 import type { Feature } from '../utils/types';
 
@@ -33,11 +35,12 @@ type Props = Omit<ModalProps, 'children'> & {
 
 const percentages = [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 100];
 
-type FormData = {
-  enabled: boolean;
-  rollout: number | null;
-  custom: string[];
-};
+type FormData = z.infer<typeof FormSchema>;
+const FormSchema = z.object({
+  enabled: z.boolean(),
+  rollout: z.number().optional(),
+  custom: z.array(z.string()).optional(),
+});
 
 export function ToggleModal({
   application,
@@ -47,32 +50,47 @@ export function ToggleModal({
   onClose,
 }: Props) {
   const variant = useBreakpointValue({ base: 'full', md: 'md' });
-  const { control, handleSubmit, setValue, watch } = useForm<FormData>({
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
       enabled: !isDisabled(feature),
       rollout: feature.audiences.find(isNumber),
-      custom: feature.audiences.filter(isString),
+      custom: feature.audiences.filter(isString) ?? [],
     },
+    resolver: zodResolver(FormSchema),
   });
   const watchRollout = watch('rollout');
-  const toggle = trpc.useMutation('toggle');
+  const toggle = trpc.useMutation('toggleFeature');
+
+  console.log('modal', errors);
 
   const onToggleProgressive = useCallback(() => {
-    if (watchRollout === null) {
+    if (watchRollout === undefined) {
       setValue('rollout', 1);
     } else {
-      setValue('rollout', null);
+      setValue('rollout', undefined);
     }
   }, [setValue, watchRollout]);
 
   const onSubmit = useCallback(
     async ({ rollout, custom }: FormData) => {
       try {
-        const audiences = rollout ? [rollout, ...custom] : custom;
+        const audiences = custom
+          ? rollout
+            ? [rollout, ...custom]
+            : custom
+          : rollout
+          ? [rollout]
+          : [];
 
         await toggle.mutateAsync({
           application,
-          feature: feature.name,
+          name: feature.name,
           audiences,
         });
       } catch (err) {
@@ -176,7 +194,6 @@ export function ToggleModal({
                 <Controller
                   name="custom"
                   control={control}
-                  defaultValue={feature.audiences.filter(isString)}
                   render={({ field }) => (
                     <CheckboxGroup
                       value={field.value}

@@ -46,11 +46,6 @@ export class Application {
     return new Feature({ name, client, server });
   }
 
-  toggleFeature(name: string, audiences: (number | string)[]): void {
-    this.server.features[name] = audiences;
-    this.onChange?.(this);
-  }
-
   registerClient(app: ClientApp) {
     if (app.name !== this.name) {
       throw new Error("INVALID_CLIENT_APP");
@@ -66,6 +61,20 @@ export class Application {
       return;
     }
     this.server = app;
+    this.onChange?.(this);
+  }
+
+  addFeature(name: string, audiences: (number | string)[]): void {
+    this.toggleFeature(name, audiences);
+  }
+
+  removeFeature(name: string): void {
+    delete this.server.features[name];
+    this.onChange?.(this);
+  }
+
+  toggleFeature(name: string, audiences: (number | string)[]): void {
+    this.server.features[name] = audiences;
     this.onChange?.(this);
   }
 

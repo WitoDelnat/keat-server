@@ -30,6 +30,10 @@ export class WatchingKubernetesSynchronizer implements Synchronizer {
   }
 
   async push(app: ServerApp) {
-    return this.client.patchApplication(app);
+    await this.client.replaceApplication(app);
+  }
+
+  async deleteApplication(name: string) {
+    await this.client.deleteApplication(name);
   }
 }

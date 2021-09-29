@@ -1,13 +1,144 @@
-import { Box } from '@chakra-ui/layout';
-import React from 'react';
-import { Layout } from '../components/Layout';
+import {
+  Box,
+  Button,
+  Grid,
+  Heading,
+  Spinner,
+  useDisclosure,
+} from '@chakra-ui/react';
+import { capitalize } from 'lodash';
+import React, { useCallback, useState } from 'react';
+import { FeatureAddModal } from '../components/FeatureAddModal';
+import { ApplicationCreateModal } from '../components/ApplicationCreateModal';
+import { FeatureCard } from '../components/FeatureCard';
+import { ToggleModal } from '../components/FeatureToggleModal';
+import { trpc } from '../utils/trpc';
+import type { Application, Feature } from '../utils/types';
 
 export function IndexPage() {
+  const { isLoading, data: applications, refetch } = trpc.useQuery([
+    'applications',
+  ]);
+
+  const [feature, setFeature] = useState<Feature | null>(null);
+  const [application, setApplication] = useState<Application | null>(null);
+
+  const toggleDisclosure = useDisclosure();
+  const createApplicationDisclosure = useDisclosure();
+  const addFeatureDisclosure = useDisclosure();
+
+  const deleteApplication = trpc.useMutation('deleteApplication');
+
+  const onDelete = useCallback(
+    async (application: Application) => {
+      try {
+        await deleteApplication.mutateAsync({
+          name: application.name,
+        });
+        await refetch();
+      } catch (err) {
+        console.error(err, 'delete failed');
+      }
+    },
+    [deleteApplication],
+  );
+
+  if (isLoading) {
+    return <Spinner />;
+  }
+
   return (
-    <Layout title={'Welcome'} applications={[]}>
-      <Box>
-        <p>Get started by adding your first application.</p>
-      </Box>
-    </Layout>
+    <Box as="main" mx="auto" maxW="3xl">
+      <Heading>Applications</Heading>
+      <Button
+        my="2"
+        colorScheme="orange"
+        onClick={createApplicationDisclosure.onOpen}
+      >
+        Create
+      </Button>
+
+      {applications?.map((application) => {
+        return (
+          <section key={application.name}>
+            <Heading my="2">{capitalize(application.name)}</Heading>
+
+            <Button
+              my="2"
+              colorScheme="orange"
+              onClick={() => onDelete(application)}
+            >
+              Delete
+            </Button>
+
+            <Button
+              ml="2"
+              my="2"
+              colorScheme="orange"
+              onClick={() => {
+                setApplication(application);
+                addFeatureDisclosure.onOpen();
+              }}
+            >
+              Add feature
+            </Button>
+
+            <Grid
+              templateColumns="repeat(auto-fill, minmax(320px, 320px));"
+              justifyContent={{ base: 'center', sm: 'start' }}
+              gridGap="4"
+            >
+              {application.features.map((feature) => {
+                return (
+                  <FeatureCard
+                    key={feature.name}
+                    feature={feature}
+                    onEdit={() => {
+                      setFeature(feature);
+                      setApplication(application);
+                      toggleDisclosure.onOpen();
+                    }}
+                  />
+                );
+              })}
+            </Grid>
+          </section>
+        );
+      })}
+
+      <ApplicationCreateModal
+        {...createApplicationDisclosure}
+        onClose={() => {
+          createApplicationDisclosure.onClose();
+          refetch();
+        }}
+      />
+      {application && (
+        <FeatureAddModal
+          application={application.name}
+          isOpen={addFeatureDisclosure.isOpen}
+          onClose={() => {
+            setApplication(null);
+            setFeature(null);
+            addFeatureDisclosure.onClose();
+            refetch();
+          }}
+        />
+      )}
+      {application && feature && (
+        <ToggleModal
+          availableAudiences={application.audiences}
+          feature={feature}
+          isOpen={toggleDisclosure.isOpen}
+          application={application.name}
+          onClose={() => {
+            setApplication(null);
+            setFeature(null);
+            toggleDisclosure.onClose();
+            refetch();
+          }}
+        />
+      )}
+    </Box>
   );
 }

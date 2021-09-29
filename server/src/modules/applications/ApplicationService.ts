@@ -24,6 +24,10 @@ export class ApplicationService extends EventDispatcher {
     application.registerServer(app);
   }
 
+  unregisterServer(name: string) {
+    this.applications = this.applications.filter((a) => a.name !== name);
+  }
+
   getOrCreate(name: string): Application {
     try {
       return this.get(name);

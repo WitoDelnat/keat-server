@@ -51,24 +51,64 @@ export class KubeClient {
     return applicationList.items.map(toApplication);
   }
 
+  async createApplication(app: ServerApp): Promise<void> {
+    try {
+      const resource: ApplicationResource = {
+        apiVersion: "keat.io/v1alpha2",
+        kind: "Application",
+        metadata: {
+          name: app.name,
+        },
+        spec: app.features,
+      };
+
+      await this.api.createNamespacedCustomObject(
+        "keat.io",
+        "v1alpha2",
+        this.namespace,
+        "applications",
+        resource,
+        undefined,
+        undefined,
+        FIELD_MANAGER
+      );
+    } catch (err) {
+      logger.error({ err }, "Kubernetes create failed");
+      throw err;
+    }
+  }
+
   async patchApplication(app: ServerApp): Promise<void> {
     try {
-      await this.api.replaceNamespacedCustomObject(
+      const resource = {
+        spec: app.features,
+      };
+
+      await this.api.patchNamespacedCustomObject(
         "keat.io",
         "v1alpha2",
         this.namespace,
         "applications",
         app.name,
-        {
-          spec: app.features,
-        },
+        resource,
         undefined,
-        FIELD_MANAGER
+        FIELD_MANAGER,
+        true
       );
     } catch (err) {
       logger.error({ err }, "Kubernetes patch failed");
       throw err;
     }
+  }
+
+  async deleteApplication(name: string): Promise<void> {
+    await this.api.deleteNamespacedCustomObject(
+      "keat.io",
+      "v1alpha2",
+      this.namespace,
+      "applications",
+      name
+    );
   }
 
   async watchApplications(
@@ -158,7 +198,7 @@ const ApplicationResource = z.object({
   spec: z.record(
     z
       .string()
-      .or(z.array(z.string()))
+      .or(z.array(z.string().or(z.number())))
       .transform((v) => (isArray(v) ? v : [v]))
   ),
 });
@@ -171,6 +211,13 @@ export const ApplicationListResource = z.object({
 });
 
 function toApplication(resource: ApplicationResource): ServerApp {
+  return {
+    name: resource.metadata.name,
+    features: resource.spec,
+  };
+}
+
+function toResource(resource: ApplicationResource): ServerApp {
   return {
     name: resource.metadata.name,
     features: resource.spec,
