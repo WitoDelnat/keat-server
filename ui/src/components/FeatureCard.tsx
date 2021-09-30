@@ -1,4 +1,4 @@
-import { EditIcon } from '@chakra-ui/icons';
+import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import {
   Badge,
   Box,
@@ -16,10 +16,11 @@ import type { Feature } from '../utils/types';
 
 type Props = {
   feature: Feature;
+  onDelete: () => void;
   onEdit: () => void;
 };
 
-export function FeatureCard({ feature, onEdit }: Props) {
+export function FeatureCard({ feature, onDelete, onEdit }: Props) {
   return (
     <Box
       minW="xs"
@@ -42,7 +43,10 @@ export function FeatureCard({ feature, onEdit }: Props) {
           {feature.name}
         </Heading>
 
-        <EditIcon aria-label="edit" cursor="pointer" onClick={onEdit} />
+        <HStack spacing="3.5">
+          <DeleteIcon aria-label="delete" cursor="pointer" onClick={onDelete} />
+          <EditIcon aria-label="edit" cursor="pointer" onClick={onEdit} />
+        </HStack>
       </HStack>
 
       <Box px="3">

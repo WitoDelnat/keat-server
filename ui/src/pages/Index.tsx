@@ -28,6 +28,7 @@ export function IndexPage() {
   const addFeatureDisclosure = useDisclosure();
 
   const deleteApplication = trpc.useMutation('deleteApplication');
+  const removeFeature = trpc.useMutation('removeFeature');
 
   const onDelete = useCallback(
     async (application: Application) => {
@@ -37,10 +38,26 @@ export function IndexPage() {
         });
         await refetch();
       } catch (err) {
-        console.error(err, 'delete failed');
+        console.error(err, 'delete application failed');
       }
     },
     [deleteApplication],
+  );
+
+  const onDeleteFeature = useCallback(
+    async (application: string, feature: string) => {
+      try {
+        await removeFeature.mutateAsync({
+          application,
+          name: feature,
+        });
+
+        await refetch();
+      } catch (err) {
+        console.error(err, 'remove feature failed');
+      }
+    },
+    [removeFeature],
   );
 
   if (isLoading) {
@@ -93,6 +110,9 @@ export function IndexPage() {
                   <FeatureCard
                     key={feature.name}
                     feature={feature}
+                    onDelete={() =>
+                      onDeleteFeature(application.name, feature.name)
+                    }
                     onEdit={() => {
                       setFeature(feature);
                       setApplication(application);
