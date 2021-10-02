@@ -1,0 +1,13 @@
+# # # # # # # # # # # # # # # #
+# BUILDER - SERVER
+# # # # # # # # # # # # # # # #
+FROM node:14-slim AS builder-server
+WORKDIR /build
+
+COPY server/package.json server/yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+COPY server .
+
+EXPOSE 8080
+CMD ["yarn", "dev"]

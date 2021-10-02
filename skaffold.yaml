@@ -5,6 +5,8 @@ metadata:
 build:
   artifacts:
     - image: gcr.io/keatproj/keat-server
+      docker:
+        dockerfile: Dockerfile.dev
 deploy:
   kubectl:
     manifests:
@@ -12,3 +14,8 @@ deploy:
       - k8s/manifests/deployment.yaml
       - k8s/manifests/service-account.yaml
       - k8s/manifests/service.yaml
+portForward:
+  - resourceType: deployment
+    resourceName: keat-server
+    namespace: default
+    port: 8080
