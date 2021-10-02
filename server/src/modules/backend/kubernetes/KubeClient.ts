@@ -93,10 +93,45 @@ export class KubeClient {
         resource,
         undefined,
         FIELD_MANAGER,
-        true
+        undefined,
+        {
+          headers: {
+            "Content-Type": "application/merge-patch+json",
+          },
+        }
       );
     } catch (err) {
-      logger.error({ err }, "Kubernetes patch failed");
+      logger.error({ err }, "Kubernetes patch  failed");
+      throw err;
+    }
+  }
+
+  async deleteFeature(application: string, feature: string): Promise<void> {
+    try {
+      const patch = {
+        spec: {
+          [feature]: null,
+        },
+      };
+
+      await this.api.patchNamespacedCustomObject(
+        "keat.io",
+        "v1alpha2",
+        this.namespace,
+        "applications",
+        application,
+        patch,
+        undefined,
+        FIELD_MANAGER,
+        undefined,
+        {
+          headers: {
+            "Content-Type": "application/merge-patch+json",
+          },
+        }
+      );
+    } catch (err) {
+      logger.error({ err }, "Kubernetes patch  failed");
       throw err;
     }
   }

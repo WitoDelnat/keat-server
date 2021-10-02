@@ -17,7 +17,7 @@ export class WatchingKubernetesSynchronizer implements Synchronizer {
       this._stopWatching = await this.client.watchApplications({
         onAdded: (app) => this.applications.registerServer(app),
         onUpdated: (app) => this.applications.registerServer(app),
-        onDeleted: () => {},
+        onDeleted: (app) => this.applications.unregisterServer(app.name),
       });
     } catch (err) {
       logger.error({ err }, "failed to watch");
@@ -29,11 +29,19 @@ export class WatchingKubernetesSynchronizer implements Synchronizer {
     await this._stopWatching?.();
   }
 
-  async push(app: ServerApp) {
-    await this.client.replaceApplication(app);
+  async createApplication(app: ServerApp) {
+    await this.client.createApplication(app);
+  }
+
+  async updateApplication(app: ServerApp) {
+    await this.client.patchApplication(app);
   }
 
   async deleteApplication(name: string) {
     await this.client.deleteApplication(name);
+  }
+
+  async deleteFeature(application: string, feature: string) {
+    await this.client.deleteFeature(application, feature);
   }
 }

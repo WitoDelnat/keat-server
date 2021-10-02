@@ -1,4 +1,4 @@
-import { isEqual, toPairs } from "lodash";
+import { isEqual, omit, toPairs } from "lodash";
 import { Feature } from "./Feature";
 import type { Application as AdminApplication } from "../../admin/index";
 
@@ -69,7 +69,7 @@ export class Application {
   }
 
   removeFeature(name: string): void {
-    delete this.server.features[name];
+    this.server.features = omit(this.server.features, name);
     this.onChange?.(this);
   }
 

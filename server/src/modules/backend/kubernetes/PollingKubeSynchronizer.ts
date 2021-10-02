@@ -6,6 +6,7 @@ import { ApplicationService } from "../../applications/ApplicationService";
 import { AbortController, AbortSignal } from "abort-controller";
 import { logger } from "../../../utils/logger";
 import { ServerApp } from "../../applications/Application";
+import { appRouter } from "../../../admin";
 
 const DEFAULT_POLL_INTERVAL = 5000;
 
@@ -49,11 +50,19 @@ export class PollingKubernetesSynchronizer implements Synchronizer {
     } while (!signal.aborted);
   }
 
-  async push(app: ServerApp) {
-    await this.client.replaceApplication(app);
+  async createApplication(app: ServerApp) {
+    await this.client.createApplication(app);
+  }
+
+  async updateApplication(app: ServerApp) {
+    await this.client.patchApplication(app);
   }
 
   async deleteApplication(name: string) {
     await this.client.deleteApplication(name);
+  }
+
+  async deleteFeature(application: string, feature: string) {
+    await this.client.deleteFeature(application, feature);
   }
 }

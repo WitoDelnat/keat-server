@@ -39,7 +39,7 @@ export const appRouter = trpc
     }),
     async resolve({ input, ctx }) {
       const app = ctx.applications.getOrCreate(input.name);
-      await ctx.synchronizer.push(app.server);
+      await ctx.synchronizer.createApplication(app.server);
     },
   })
   .mutation("deleteApplication", {
@@ -60,7 +60,7 @@ export const appRouter = trpc
       logger.info({ input }, "addFeature");
       const app = ctx.applications.get(input.application);
       app.addFeature(input.name, input.audiences);
-      await ctx.synchronizer.push(app.server);
+      await ctx.synchronizer.updateApplication(app.server);
     },
   })
   .mutation("removeFeature", {
@@ -71,7 +71,7 @@ export const appRouter = trpc
     async resolve({ input, ctx }) {
       const app = ctx.applications.get(input.application);
       app.removeFeature(input.name);
-      await ctx.synchronizer.push(app.server);
+      await ctx.synchronizer.deleteFeature(app.name, input.name);
     },
   })
   .mutation("toggleFeature", {
@@ -83,6 +83,6 @@ export const appRouter = trpc
     async resolve({ input, ctx }) {
       const app = ctx.applications.get(input.application);
       app.toggleFeature(input.name, input.audiences);
-      await ctx.synchronizer.push(app.server);
+      await ctx.synchronizer.updateApplication(app.server);
     },
   });
