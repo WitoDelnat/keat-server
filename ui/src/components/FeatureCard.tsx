@@ -49,9 +49,10 @@ export function FeatureCard({ feature, onDelete, onEdit }: Props) {
         </HStack>
       </HStack>
 
-      <Box px="3">
+      <Box px="3" mt="2">
         <Heading
           mt="2"
+          mb="2"
           letterSpacing="tight"
           textTransform="uppercase"
           fontSize="12px"
@@ -59,14 +60,25 @@ export function FeatureCard({ feature, onDelete, onEdit }: Props) {
           Audiences
         </Heading>
 
-        <HStack pt="2">
-          {feature.audiences
-            .map((a) => (isNumber(a) ? 'rollout' : a))
-            .map((audience) => (
-              <Badge key={audience} variant="subtle" colorScheme="orange">
-                {audience}
-              </Badge>
-            ))}
+        <HStack>
+          {feature.audiences.filter((a) => a !== false).length === 0 ? (
+            <Badge variant="subtle" colorScheme="red">
+              Disabled
+            </Badge>
+          ) : (
+            feature.audiences
+              .map((a) => (isNumber(a) ? 'rollout' : a))
+              .map((a) => (a === true ? 'enabled' : a))
+              .map((audience) => (
+                <Badge
+                  key={audience.toString()}
+                  variant="subtle"
+                  colorScheme="orange"
+                >
+                  {audience}
+                </Badge>
+              ))
+          )}
         </HStack>
 
         <HStack mt="2">
@@ -94,18 +106,6 @@ export function FeatureCard({ feature, onDelete, onEdit }: Props) {
             </Slider>
           )}
         </Box>
-
-        <Heading
-          letterSpacing="tight"
-          textTransform="uppercase"
-          fontSize="12px"
-        >
-          Last seen
-        </Heading>
-
-        <HStack>
-          <Text fontWeight="thin">Yesterday</Text>
-        </HStack>
       </Box>
     </Box>
   );

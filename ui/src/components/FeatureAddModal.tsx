@@ -37,7 +37,6 @@ export function FeatureAddModal({ application, isOpen, onClose }: Props) {
   const onSubmit = useCallback(
     async ({ name }: FormData) => {
       try {
-        console.log('onFeatureAdd', application, name);
         await addFeature.mutateAsync({ application, name, audiences: [] });
       } catch (err) {
         console.error(err);

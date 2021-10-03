@@ -233,7 +233,7 @@ const ApplicationResource = z.object({
   spec: z.record(
     z
       .string()
-      .or(z.array(z.string().or(z.number())))
+      .or(z.array(z.string().or(z.number()).or(z.boolean())))
       .transform((v) => (isArray(v) ? v : [v]))
   ),
 });

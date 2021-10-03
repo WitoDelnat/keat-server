@@ -1,5 +1,6 @@
 import * as trpc from "@trpc/server";
 import { z } from "zod";
+import type { Audience } from "../modules/applications/Application";
 import type { ApplicationService } from "../modules/applications/ApplicationService";
 import type { Synchronizer } from "../modules/backend/synchronizer";
 import { logger } from "../utils/logger";
@@ -8,10 +9,10 @@ export type AppRouter = typeof appRouter;
 
 export type Feature = {
   name: string;
-  audiences: (number | string)[];
+  audiences: Audience[];
+  client?: Audience[];
+  server?: Audience[];
   progression?: number;
-  client?: (number | string)[];
-  server?: (number | string)[];
 };
 
 export type Application = {
@@ -24,6 +25,8 @@ export type Context = {
   applications: ApplicationService;
   synchronizer: Synchronizer;
 };
+
+const AudienceSchema = z.boolean().or(z.string()).or(z.number());
 
 export const appRouter = trpc
   .router<Context>()
@@ -54,7 +57,7 @@ export const appRouter = trpc
     input: z.object({
       application: z.string(),
       name: z.string(),
-      audiences: z.array(z.string()),
+      audiences: AudienceSchema.array(),
     }),
     async resolve({ input, ctx }) {
       logger.info({ input }, "addFeature");
@@ -78,7 +81,7 @@ export const appRouter = trpc
     input: z.object({
       application: z.string(),
       name: z.string(),
-      audiences: z.array(z.string().or(z.number())),
+      audiences: AudienceSchema.array(),
     }),
     async resolve({ input, ctx }) {
       const app = ctx.applications.get(input.application);

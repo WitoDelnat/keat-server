@@ -2,15 +2,17 @@ import { isEqual, omit, toPairs } from "lodash";
 import { Feature } from "./Feature";
 import type { Application as AdminApplication } from "../../admin/index";
 
+export type Audience = boolean | number | string;
+
 export type ClientApp = {
   name: string;
   audiences: string[];
-  features: Record<string, (number | string)[]>;
+  features: Record<string, Audience[]>;
 };
 
 export type ServerApp = {
   name: string;
-  features: Record<string, (number | string)[]>;
+  features: Record<string, Audience[]>;
 };
 
 export class Application {
@@ -64,7 +66,7 @@ export class Application {
     this.onChange?.(this);
   }
 
-  addFeature(name: string, audiences: (number | string)[]): void {
+  addFeature(name: string, audiences: Audience[]): void {
     this.toggleFeature(name, audiences);
   }
 
@@ -73,7 +75,7 @@ export class Application {
     this.onChange?.(this);
   }
 
-  toggleFeature(name: string, audiences: (number | string)[]): void {
+  toggleFeature(name: string, audiences: Audience[]): void {
     this.server.features[name] = audiences;
     this.onChange?.(this);
   }
@@ -98,7 +100,7 @@ export class Application {
     };
   }
 
-  exposeProxyResponse(): Record<string, (number | string)[]> {
+  exposeProxyResponse(): Record<string, Audience[]> {
     return this.server?.features ?? {};
   }
 }

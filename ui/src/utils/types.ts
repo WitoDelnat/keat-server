@@ -1,9 +1,11 @@
+export type Audience = boolean | number | string;
+
 export type Feature = {
   name: string;
-  audiences: (number | string)[];
+  audiences: Audience[];
   progression?: number;
-  client?: (number | string)[];
-  server?: (number | string)[];
+  client?: Audience[];
+  server?: Audience[];
 };
 
 export type Application = {

@@ -147,7 +147,6 @@ export function IndexPage() {
       )}
       {application && feature && (
         <ToggleModal
-          availableAudiences={application.audiences}
           feature={feature}
           isOpen={toggleDisclosure.isOpen}
           application={application.name}

@@ -2,8 +2,8 @@ import {
   Badge,
   Button,
   Checkbox,
-  CheckboxGroup,
-  Heading,
+  FormControl,
+  FormLabel,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -12,24 +12,21 @@ import {
   ModalHeader,
   ModalOverlay,
   ModalProps,
-  Radio,
-  RadioGroup,
   SimpleGrid,
-  Stack,
-  Text,
+  Switch,
   useBreakpointValue,
 } from '@chakra-ui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { isNumber, isString, startCase } from 'lodash';
+import { isNumber, isString } from 'lodash';
 import React, { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { trpc } from '../utils/trpc';
 import type { Feature } from '../utils/types';
+import { AudienceSelect } from './AudienceSelect';
 
 type Props = Omit<ModalProps, 'children'> & {
   application: string;
-  availableAudiences: string[];
   feature: Feature;
 };
 
@@ -39,54 +36,26 @@ type FormData = z.infer<typeof FormSchema>;
 const FormSchema = z.object({
   enabled: z.boolean(),
   rollout: z.number().optional(),
-  custom: z.array(z.string()).optional(),
+  groups: z.array(z.string()),
 });
 
-export function ToggleModal({
-  application,
-  availableAudiences,
-  feature,
-  isOpen,
-  onClose,
-}: Props) {
+export function ToggleModal({ application, feature, isOpen, onClose }: Props) {
   const variant = useBreakpointValue({ base: 'full', md: 'md' });
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm({
+  const { control, handleSubmit, setValue, watch } = useForm({
     defaultValues: {
       enabled: !isDisabled(feature),
       rollout: feature.audiences.find(isNumber),
-      custom: feature.audiences.filter(isString) ?? [],
+      groups: feature.audiences.filter(isString) ?? [],
     },
     resolver: zodResolver(FormSchema),
   });
   const watchRollout = watch('rollout');
   const toggle = trpc.useMutation('toggleFeature');
 
-  console.log('modal', errors);
-
-  const onToggleProgressive = useCallback(() => {
-    if (watchRollout === undefined) {
-      setValue('rollout', 1);
-    } else {
-      setValue('rollout', undefined);
-    }
-  }, [setValue, watchRollout]);
-
   const onSubmit = useCallback(
-    async ({ rollout, custom }: FormData) => {
+    async (form: FormData) => {
       try {
-        const audiences = custom
-          ? rollout
-            ? [rollout, ...custom]
-            : custom
-          : rollout
-          ? [rollout]
-          : [];
+        const audiences = determineAudiences(form);
 
         await toggle.mutateAsync({
           application,
@@ -110,117 +79,104 @@ export function ToggleModal({
           <ModalHeader>Toggle feature</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Heading
-              letterSpacing="tight"
-              textTransform="uppercase"
-              fontSize="12px"
-            >
-              Enabled
-            </Heading>
+            <FormControl display="flex" mb="3">
+              <FormLabel
+                letterSpacing="tight"
+                textTransform="uppercase"
+                fontSize="12px"
+              >
+                Enable
+              </FormLabel>
+              <Controller
+                name="enabled"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    colorScheme="orange"
+                    isChecked={field.value}
+                    onChange={() => field.onChange(!field.value)}
+                  />
+                )}
+              />
+            </FormControl>
 
-            <Controller
-              name="enabled"
-              control={control}
-              render={({ field }) => (
-                <RadioGroup value={field.value ? 'everyone' : 'nobody'}>
-                  <Stack spacing={5} direction="row">
-                    <Radio colorScheme="orange" value={'nobody'}>
-                      Yes
-                    </Radio>
-                    <Radio colorScheme="orange" value={'everyone'}>
-                      No
-                    </Radio>
-                  </Stack>
-                </RadioGroup>
-              )}
-            />
+            <FormControl mb="3">
+              <FormLabel
+                letterSpacing="tight"
+                textTransform="uppercase"
+                fontSize="12px"
+              >
+                Groups
+              </FormLabel>
 
-            <Heading
-              letterSpacing="tight"
-              textTransform="uppercase"
-              fontSize="12px"
-            >
-              Progressive rollout
-            </Heading>
+              <Controller
+                name="groups"
+                control={control}
+                render={({ field }) => (
+                  <AudienceSelect
+                    value={field.value.map((value) => ({
+                      label: value,
+                      value,
+                    }))}
+                    onChange={(v) => {
+                      field.onChange(v.map((option) => option.value));
+                    }}
+                  />
+                )}
+              />
+            </FormControl>
 
-            <Checkbox
-              my="2"
-              isChecked={watchRollout !== null}
-              onChange={onToggleProgressive}
-            >
-              Enable
-            </Checkbox>
+            <FormControl>
+              <FormLabel
+                letterSpacing="tight"
+                textTransform="uppercase"
+                fontSize="12px"
+              >
+                Progressive rollout
+              </FormLabel>
 
-            <Controller
-              name="rollout"
-              control={control}
-              render={({ field }) => (
-                <SimpleGrid
-                  py="1"
-                  columns={[3, 4]}
-                  gap="2"
-                  justifyContent="center"
-                >
-                  {percentages.map((p) => {
-                    const selected = field.value === p;
-                    return (
-                      <Badge
-                        key={p}
-                        textAlign="center"
-                        p="1"
-                        colorScheme={selected ? 'orange' : 'whiteAlpha'}
-                        cursor="pointer"
-                        onClick={() => field.onChange(p)}
-                      >
-                        {p}%
-                      </Badge>
-                    );
-                  })}
-                </SimpleGrid>
-              )}
-            />
+              <Checkbox
+                mb="2"
+                isChecked={watchRollout !== undefined}
+                onChange={() =>
+                  setValue(
+                    'rollout',
+                    typeof watchRollout === 'number' ? undefined : 1,
+                  )
+                }
+              >
+                Enable
+              </Checkbox>
 
-            {availableAudiences.length === 0 ? undefined : (
-              <>
-                <Heading
-                  mt="3"
-                  letterSpacing="tight"
-                  textTransform="uppercase"
-                  fontSize="12px"
-                >
-                  Audiences
-                </Heading>
-
-                <Controller
-                  name="custom"
-                  control={control}
-                  render={({ field }) => (
-                    <CheckboxGroup
-                      value={field.value}
-                      onChange={(value) => field.onChange(value)}
-                    >
-                      <SimpleGrid pt="2" columns={[1, 2]} gap="2" w="full">
-                        {availableAudiences.map((audience) => (
-                          <Checkbox key={audience} value={audience}>
-                            {startCase(audience)}
-                          </Checkbox>
-                        ))}
-                      </SimpleGrid>
-                    </CheckboxGroup>
-                  )}
-                />
-              </>
-            )}
-
-            <Text
-              mt="3"
-              letterSpacing="tight"
-              fontSize="12px"
-              fontWeight="light"
-              decoration="underline"
-            >
-              add custom audience
-            </Text>
+              <Controller
+                name="rollout"
+                control={control}
+                render={({ field }) => (
+                  <SimpleGrid
+                    py="1"
+                    columns={[3, 4]}
+                    gap="2"
+                    justifyContent="center"
+                  >
+                    {percentages.map((p) => {
+                      const selected = field.value === p;
+                      return (
+                        <Badge
+                          key={p}
+                          textAlign="center"
+                          p="1"
+                          colorScheme={selected ? 'orange' : 'whiteAlpha'}
+                          cursor="pointer"
+                          onClick={() => field.onChange(p)}
+                        >
+                          {p}%
+                        </Badge>
+                      );
+                    })}
+                  </SimpleGrid>
+                )}
+              />
+            </FormControl>
           </ModalBody>
 
           <ModalFooter>
@@ -257,4 +213,18 @@ function isDisabled(feature: Feature): boolean {
     feature.audiences.length === 0 ||
     feature.audiences.some((a) => a === 'nobody' || false)
   );
+}
+
+function determineAudiences({
+  enabled,
+  rollout,
+  groups,
+}: FormData): Array<boolean | number | string> {
+  if (!enabled) {
+    return [false];
+  }
+  if (!rollout && groups.length === 0) {
+    return [true];
+  }
+  return rollout ? [rollout, ...groups] : groups;
 }
