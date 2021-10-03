@@ -13,7 +13,7 @@
   "dependencies": {
     "@kubernetes/client-node": "0.15.1",
     "@sinclair/typebox": "0.16.5",
-    "@trpc/server": "9.6.0",
+    "@trpc/server": "9.8.0",
     "abort-controller": "3.0.0",
     "ajv": "8.2.0",
     "config": "3.3.6",

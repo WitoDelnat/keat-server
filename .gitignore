@@ -1,6 +1,8 @@
-k8s/example/**
-config/local*
-dist/**
-**/node_modules/**
-yarn-error.log
 docs/**
+k8s/example/**
+
+**/dist/**
+**/node_modules/**
+**/yarn-error.log
+
+server/config/local*

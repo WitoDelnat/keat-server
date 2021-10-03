@@ -37,7 +37,7 @@ COPY server/package.json server/yarn.lock ./
 RUN yarn install --production --frozen-lockfile && yarn cache clean
 
 COPY --from=builder-server /build/dist ./dist
-COPY --from=builder-ui /build/ui/build ./public
+COPY --from=builder-ui /build/ui/dist ./public
 COPY server/config ./config
 
 ENV NODE_ENV=production
