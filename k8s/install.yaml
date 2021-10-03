@@ -45,7 +45,10 @@ rules:
   - get
   - list
   - watch
+  - create
+  - update
   - patch
+  - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -91,7 +94,7 @@ spec:
         app: keat-server
     spec:
       containers:
-      - image: gcr.io/keatproj/keat-server:0.2.0-alpha.1
+      - image: gcr.io/keatproj/keat-server:0.2.0-alpha.2
         name: keat-server
         ports:
         - containerPort: 8080
