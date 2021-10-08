@@ -30,7 +30,7 @@ export async function sync(fastify: FastifyInstance) {
     fastify.applications.addEventStream(name, stream);
 
     const payload = fastify.applications.serialize({
-      data: application.exposeProxyResponse(),
+      data: application.toJson(),
     });
     stream.push(payload);
   });

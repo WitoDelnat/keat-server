@@ -1,4 +1,5 @@
 import { isNumber, isString, toPairs } from "lodash";
+import { logger } from "../../utils/logger";
 import { DiscoveryCache } from "./DiscoveryCache";
 import { Feature } from "./Feature";
 
@@ -18,8 +19,8 @@ export type ServerApp = {
 export class Application {
   public name: string;
   public features = new Map<string, Feature>();
-  private discoveredGroups = new DiscoveryCache();
-  private discoveredFeatures = new DiscoveryCache();
+  public discoveredGroups = new DiscoveryCache();
+  public discoveredFeatures = new DiscoveryCache();
 
   private onChange?: (app: Application) => void;
 
@@ -41,14 +42,23 @@ export class Application {
   }
 
   registerClient(app: ClientApp) {
+    console.log("onregisterclient");
+
     if (app.name !== this.name) {
       throw new Error("INVALID_CLIENT_APP");
     }
     const groups = app.audiences.filter((a) => typeof a === "string");
     this.discoveredGroups.putAll(groups);
 
-    const features = app.features.filter((f) => !this.hasFeature(f));
-    this.discoveredFeatures.putAll(features);
+    for (const name of app.features) {
+      const feature = this.features.get(name);
+
+      if (!feature) {
+        this.discoveredFeatures.put(name);
+      } else {
+        feature.spot();
+      }
+    }
   }
 
   registerServer(app: ServerApp) {
@@ -104,35 +114,17 @@ export class Application {
   toggleFeature(name: string, audiences: Audience[]): void {
     this.discoveredFeatures.delete(name);
     const feature = this.features.get(name);
-    if (!feature) return;
-    feature.audiences = audiences;
+
+    if (!feature) {
+      this.features.set(name, new Feature({ name, audiences }));
+    } else {
+      feature.audiences = audiences;
+    }
+
     this.onChange?.(this);
   }
 
-  exposeAdminResponse() {
-    const features = [];
-
-    for (const feature of this.features.values()) {
-      const name = feature.name;
-      const audiences = feature.audiences;
-      const enabled = audiences.filter((a) => a !== false).length !== 0;
-      const progression = audiences.find(isNumber);
-      const groups = audiences.filter(isString);
-      features.push({ name, audiences, enabled, progression, groups });
-    }
-
-    const audiences = this.discoveredGroups.getAll();
-    const suggestedFeatures = this.discoveredFeatures.getAll();
-
-    return {
-      name: this.name,
-      audiences,
-      features,
-      suggestedFeatures,
-    };
-  }
-
-  exposeProxyResponse(): Record<string, Audience[]> {
+  toJson(): Record<string, Audience[]> {
     const result: Record<string, Audience[]> = {};
 
     for (const feature of this.features.values()) {

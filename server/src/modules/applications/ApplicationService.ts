@@ -15,7 +15,7 @@ export class ApplicationService extends EventDispatcher {
   }
 
   registerClient(app: ClientApp) {
-    const application = this.getOrCreate(app.name);
+    const application = this.get(app.name);
     application.registerClient(app);
   }
 
@@ -35,7 +35,7 @@ export class ApplicationService extends EventDispatcher {
       const application = new Application({
         name,
         onChange: (app) => {
-          this.dispatch(app.name, { data: app.exposeProxyResponse() });
+          this.dispatch(app.name, { data: app.toJson() });
         },
       });
       this.applications.push(application);

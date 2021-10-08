@@ -10,6 +10,7 @@ import {
   SliderTrack,
   Text,
 } from '@chakra-ui/react';
+import { formatDistanceToNow } from 'date-fns';
 import React from 'react';
 import type { Feature } from '../../../server/src/admin';
 
@@ -49,6 +50,24 @@ export function FeatureCard({ feature, onDelete, onEdit }: Props) {
       </HStack>
 
       <Box px="3" mt="2">
+        <Heading
+          mt="2"
+          letterSpacing="tight"
+          textTransform="uppercase"
+          fontSize="12px"
+        >
+          Last seen
+        </Heading>
+
+        <HStack>
+          <Badge my="2" variant="subtle" colorScheme="yellow">
+            {feature.lifecycle}
+          </Badge>
+          {feature.lastSeen ? (
+            <Text>{formatDistanceToNow(feature.lastSeen)}</Text>
+          ) : null}
+        </HStack>
+
         <Heading
           mt="2"
           letterSpacing="tight"

@@ -24,7 +24,7 @@ export function createServer({
   applications,
   synchronizer,
 }: ServerInit) {
-  const server = Fastify({ logger });
+  const server = Fastify();
 
   server.register(fastifyCors, {
     origin: "*",
