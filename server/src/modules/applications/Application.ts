@@ -1,4 +1,4 @@
-import { isEqual, isNumber, isString, keys, omit, toPairs } from "lodash";
+import { isNumber, isString, toPairs } from "lodash";
 import { DiscoveryCache } from "./DiscoveryCache";
 import { Feature } from "./Feature";
 
@@ -17,7 +17,7 @@ export type ServerApp = {
 
 export class Application {
   public name: string;
-  public server: ServerApp;
+  public features = new Map<string, Feature>();
   private discoveredGroups = new DiscoveryCache();
   private discoveredFeatures = new DiscoveryCache();
 
@@ -29,22 +29,15 @@ export class Application {
     onChange?: (app: Application) => void;
   }) {
     this.name = init.name;
-    this.server = init.server ?? { name: init.name, features: {} };
     this.onChange = init.onChange;
   }
 
   getFeature(name: string): Feature | undefined {
-    const server = this.server?.features[name];
-
-    if (!server) {
-      return undefined;
-    }
-
-    return new Feature({ name, server });
+    return this.features.get(name);
   }
 
   hasFeature(name: string): boolean {
-    return this.server?.features[name] !== undefined;
+    return this.features.has(name);
   }
 
   registerClient(app: ClientApp) {
@@ -62,31 +55,71 @@ export class Application {
     if (app.name !== this.name) {
       throw new Error("INVALID_SERVER_APP");
     }
-    if (isEqual(this.server, app)) {
+    if (this.containsUpdate(app)) {
       return;
     }
-    this.server = app;
+
+    this.features = this.createFeatures(app);
     this.onChange?.(this);
   }
 
+  private containsUpdate(app: ServerApp) {
+    const pairs = toPairs(app.features);
+
+    if (pairs.length !== this.features.size) {
+      return false; // more or fewer features
+    }
+
+    for (const [name, audiences] of pairs) {
+      const feature = this.getFeature(name);
+      if (feature?.audiences.length === audiences.length) {
+        return true; // more or fewer audiences
+      }
+
+      for (const audience of audiences) {
+        if (!feature?.audiences.some((a) => a === audience)) {
+          return true; // some audience changed value
+        }
+      }
+    }
+
+    return false;
+  }
+
+  private createFeatures(app: ServerApp) {
+    const result = new Map<string, Feature>();
+
+    for (const [name, audiences] of toPairs(app.features)) {
+      result.set(name, new Feature({ name, audiences }));
+    }
+
+    return result;
+  }
+
   removeFeature(name: string): void {
-    this.server.features = omit(this.server.features, name);
+    this.features.delete(name);
     this.onChange?.(this);
   }
 
   toggleFeature(name: string, audiences: Audience[]): void {
     this.discoveredFeatures.delete(name);
-    this.server.features[name] = audiences;
+    const feature = this.features.get(name);
+    if (!feature) return;
+    feature.audiences = audiences;
     this.onChange?.(this);
   }
 
   exposeAdminResponse() {
-    const features = toPairs(this.server.features).map(([name, audiences]) => {
+    const features = [];
+
+    for (const feature of this.features.values()) {
+      const name = feature.name;
+      const audiences = feature.audiences;
       const enabled = audiences.filter((a) => a !== false).length !== 0;
       const progression = audiences.find(isNumber);
       const groups = audiences.filter(isString);
-      return { name, audiences, enabled, progression, groups };
-    });
+      features.push({ name, audiences, enabled, progression, groups });
+    }
 
     const audiences = this.discoveredGroups.getAll();
     const suggestedFeatures = this.discoveredFeatures.getAll();
@@ -100,6 +133,12 @@ export class Application {
   }
 
   exposeProxyResponse(): Record<string, Audience[]> {
-    return this.server?.features ?? {};
+    const result: Record<string, Audience[]> = {};
+
+    for (const feature of this.features.values()) {
+      result[feature.name] = feature.audiences;
+    }
+
+    return result;
   }
 }

@@ -2,19 +2,11 @@ import type { Audience } from "./Application";
 
 export class Feature {
   public name: string;
-  public server?: Audience[];
+  public audiences: Audience[];
 
-  constructor(init: {
-    name: string;
-    client?: Audience[];
-    server?: Audience[];
-  }) {
+  constructor(init: { name: string; audiences?: Audience[] }) {
     this.name = init.name;
-    this.server = init.server;
-  }
-
-  get audiences(): Audience[] {
-    return this.server ?? [];
+    this.audiences = init.audiences ?? [];
   }
 
   get progression(): number | undefined {
