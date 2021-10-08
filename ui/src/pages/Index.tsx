@@ -1,19 +1,21 @@
 import {
   Box,
   Button,
+  chakra,
+  Circle,
   Grid,
   Heading,
+  HStack,
   Spinner,
   useDisclosure,
 } from '@chakra-ui/react';
 import { capitalize } from 'lodash';
 import React, { useCallback, useState } from 'react';
-import { FeatureAddModal } from '../components/FeatureAddModal';
+import type { Application, Feature } from '../../../server/src/admin';
 import { ApplicationCreateModal } from '../components/ApplicationCreateModal';
 import { FeatureCard } from '../components/FeatureCard';
 import { ToggleModal } from '../components/FeatureToggleModal';
 import { trpc } from '../utils/trpc';
-import type { Application, Feature } from '../../../server/src/admin';
 
 export function IndexPage() {
   const {
@@ -27,7 +29,6 @@ export function IndexPage() {
 
   const toggleDisclosure = useDisclosure();
   const createApplicationDisclosure = useDisclosure();
-  const addFeatureDisclosure = useDisclosure();
 
   const deleteApplication = trpc.useMutation('deleteApplication');
   const removeFeature = trpc.useMutation('removeFeature');
@@ -68,39 +69,56 @@ export function IndexPage() {
 
   return (
     <Box as="main" mx="auto" maxW="3xl">
-      <Heading>Applications</Heading>
-      <Button
-        my="2"
-        colorScheme="orange"
-        onClick={createApplicationDisclosure.onOpen}
-      >
-        Create
-      </Button>
+      <HStack>
+        <Heading>Applications</Heading>
+
+        <Button
+          size="sm"
+          colorScheme="whiteAlpha"
+          onClick={createApplicationDisclosure.onOpen}
+        >
+          Create
+        </Button>
+      </HStack>
 
       {applications?.map((application) => {
         return (
           <section key={application.name}>
-            <Heading my="2">{capitalize(application.name)}</Heading>
+            <HStack my="2">
+              <Heading>{capitalize(application.name)}</Heading>
 
-            <Button
-              my="2"
-              colorScheme="orange"
-              onClick={() => onDelete(application)}
-            >
-              Delete
-            </Button>
+              <Button
+                size="sm"
+                colorScheme="whiteAlpha"
+                onClick={() => onDelete(application)}
+              >
+                Delete
+              </Button>
 
-            <Button
-              ml="2"
-              my="2"
-              colorScheme="orange"
-              onClick={() => {
-                setApplication(application);
-                addFeatureDisclosure.onOpen();
-              }}
-            >
-              Add feature
-            </Button>
+              <Button
+                size="sm"
+                colorScheme="whiteAlpha"
+                onClick={() => {
+                  setApplication(application);
+                  toggleDisclosure.onOpen();
+                }}
+              >
+                Add feature
+                {application.suggestedFeatures.length ? (
+                  <Box paddingLeft="3">
+                    <Circle size="18px" background="orange.100" display="flex">
+                      <chakra.span color="orange.700" fontSize="xs">
+                        {application.suggestedFeatures.length}
+                      </chakra.span>
+                    </Circle>
+                  </Box>
+                ) : null}
+              </Button>
+            </HStack>
+
+            <Heading size="sm" my="2">
+              Manage
+            </Heading>
 
             <Grid
               templateColumns="repeat(auto-fill, minmax(320px, 320px));"
@@ -135,23 +153,13 @@ export function IndexPage() {
           refetch();
         }}
       />
+
       {application && (
-        <FeatureAddModal
-          application={application.name}
-          isOpen={addFeatureDisclosure.isOpen}
-          onClose={() => {
-            setApplication(null);
-            setFeature(null);
-            addFeatureDisclosure.onClose();
-            refetch();
-          }}
-        />
-      )}
-      {application && feature && (
         <ToggleModal
           feature={feature}
           isOpen={toggleDisclosure.isOpen}
           application={application.name}
+          suggestedFeatures={application.suggestedFeatures}
           suggestedAudiences={application.audiences}
           onClose={() => {
             setApplication(null);

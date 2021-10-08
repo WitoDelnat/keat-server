@@ -19,6 +19,7 @@ export type Application = {
   name: string;
   audiences: string[];
   features: Feature[];
+  suggestedFeatures: string[];
 };
 
 export type Context = {
@@ -31,7 +32,7 @@ const AudienceSchema = z.boolean().or(z.string()).or(z.number());
 export const appRouter = trpc
   .router<Context>()
   .query("applications", {
-    async resolve({ ctx }) {
+    async resolve({ ctx }): Promise<Application[]> {
       const applications = ctx.applications.getAll();
       return applications.map((a) => a.exposeAdminResponse());
     },
@@ -51,19 +52,6 @@ export const appRouter = trpc
     }),
     async resolve({ input, ctx }) {
       await ctx.synchronizer.deleteApplication(input.name);
-    },
-  })
-  .mutation("addFeature", {
-    input: z.object({
-      application: z.string(),
-      name: z.string(),
-      audiences: AudienceSchema.array(),
-    }),
-    async resolve({ input, ctx }) {
-      logger.info({ input }, "addFeature");
-      const app = ctx.applications.get(input.application);
-      app.addFeature(input.name, input.audiences);
-      await ctx.synchronizer.updateApplication(app.server);
     },
   })
   .mutation("removeFeature", {

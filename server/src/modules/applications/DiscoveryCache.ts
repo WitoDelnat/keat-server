@@ -14,6 +14,10 @@ export class DiscoveryCache {
     maxAge: SEVEN_DAYS_IN_MS,
   });
 
+  delete(value: string) {
+    this.cache.del(value);
+  }
+
   put(value: string) {
     this.cache.set(value, true);
   }

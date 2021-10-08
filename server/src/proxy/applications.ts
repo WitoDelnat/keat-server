@@ -8,15 +8,6 @@ const BodySchema = z.object({
 });
 
 export async function register(fastify: FastifyInstance) {
-  fastify.get("/applications", (_, reply) => {
-    const apps = fastify.applications
-      .getAll()
-      .map((a) => a.client)
-      .filter((a) => a !== undefined);
-
-    reply.code(200).send(apps);
-  });
-
   fastify.post("/applications", (request, reply) => {
     const clientApp = BodySchema.parse(JSON.parse(request.body as string));
 

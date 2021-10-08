@@ -1,4 +1,4 @@
-import { isEqual, isNumber, isString, omit, toPairs } from "lodash";
+import { isEqual, isNumber, isString, keys, omit, toPairs } from "lodash";
 import { DiscoveryCache } from "./DiscoveryCache";
 import { Feature } from "./Feature";
 
@@ -19,6 +19,7 @@ export class Application {
   public name: string;
   public server: ServerApp;
   private discoveredGroups = new DiscoveryCache();
+  private discoveredFeatures = new DiscoveryCache();
 
   private onChange?: (app: Application) => void;
 
@@ -42,12 +43,19 @@ export class Application {
     return new Feature({ name, server });
   }
 
+  hasFeature(name: string): boolean {
+    return this.server?.features[name] !== undefined;
+  }
+
   registerClient(app: ClientApp) {
     if (app.name !== this.name) {
       throw new Error("INVALID_CLIENT_APP");
     }
     const groups = app.audiences.filter((a) => typeof a === "string");
     this.discoveredGroups.putAll(groups);
+
+    const features = app.features.filter((f) => !this.hasFeature(f));
+    this.discoveredFeatures.putAll(features);
   }
 
   registerServer(app: ServerApp) {
@@ -61,16 +69,13 @@ export class Application {
     this.onChange?.(this);
   }
 
-  addFeature(name: string, audiences: Audience[]): void {
-    this.toggleFeature(name, audiences);
-  }
-
   removeFeature(name: string): void {
     this.server.features = omit(this.server.features, name);
     this.onChange?.(this);
   }
 
   toggleFeature(name: string, audiences: Audience[]): void {
+    this.discoveredFeatures.delete(name);
     this.server.features[name] = audiences;
     this.onChange?.(this);
   }
@@ -84,11 +89,13 @@ export class Application {
     });
 
     const audiences = this.discoveredGroups.getAll();
+    const suggestedFeatures = this.discoveredFeatures.getAll();
 
     return {
       name: this.name,
       audiences,
       features,
+      suggestedFeatures,
     };
   }
 

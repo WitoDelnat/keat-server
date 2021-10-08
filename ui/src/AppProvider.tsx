@@ -16,7 +16,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     trpc.createClient({
       links: [
         httpLink({
-          url: `/admin/trpc`,
+          url: `http://localhost:8080/admin/trpc`,
         }),
       ],
     }),

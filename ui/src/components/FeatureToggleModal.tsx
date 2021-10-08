@@ -13,7 +13,6 @@ import {
   ModalOverlay,
   ModalProps,
   SimpleGrid,
-  Switch,
   useBreakpointValue,
 } from '@chakra-ui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,23 +23,27 @@ import { z } from 'zod';
 import type { Feature } from '../../../server/src/admin';
 import { trpc } from '../utils/trpc';
 import { AudienceSelect } from './AudienceSelect';
+import { FeatureSelect } from './FeatureSelect';
 
 type Props = Omit<ModalProps, 'children'> & {
   application: string;
   suggestedAudiences: string[];
-  feature: Feature;
+  suggestedFeatures: string[];
+  feature: Feature | null;
 };
 
 const percentages = [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 100];
 
 type FormData = z.infer<typeof FormSchema>;
 const FormSchema = z.object({
+  name: z.string(),
   rollout: z.number().optional(),
   groups: z.array(z.string()),
 });
 
 export function ToggleModal({
   application,
+  suggestedFeatures,
   suggestedAudiences,
   feature,
   isOpen,
@@ -49,8 +52,9 @@ export function ToggleModal({
   const variant = useBreakpointValue({ base: 'full', md: 'md' });
   const { control, handleSubmit, setValue, watch } = useForm({
     defaultValues: {
-      rollout: feature.audiences.find(isNumber),
-      groups: feature.audiences.filter(isString) ?? [],
+      name: feature?.name,
+      rollout: feature?.audiences.find(isNumber),
+      groups: feature?.audiences.filter(isString) ?? [],
     },
     resolver: zodResolver(FormSchema),
   });
@@ -58,13 +62,13 @@ export function ToggleModal({
   const toggle = trpc.useMutation('toggleFeature');
 
   const onSubmit = useCallback(
-    async ({ rollout, groups }: FormData) => {
+    async ({ name, rollout, groups }: FormData) => {
       try {
         const audiences = rollout ? [rollout, ...groups] : groups;
 
         await toggle.mutateAsync({
           application,
-          name: feature.name,
+          name,
           audiences,
         });
       } catch (err) {
@@ -84,6 +88,31 @@ export function ToggleModal({
           <ModalHeader>Toggle feature</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
+            <FormControl mb="3">
+              <FormLabel
+                letterSpacing="tight"
+                textTransform="uppercase"
+                fontSize="12px"
+              >
+                Name
+              </FormLabel>
+
+              <Controller
+                name="name"
+                control={control}
+                render={({ field }) => (
+                  <FeatureSelect
+                    isDisabled={Boolean(feature)}
+                    options={suggestedFeatures}
+                    value={field.value}
+                    onChange={(v) => {
+                      field.onChange(v);
+                    }}
+                  />
+                )}
+              />
+            </FormControl>
+
             <FormControl mb="3">
               <FormLabel
                 letterSpacing="tight"
