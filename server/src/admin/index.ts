@@ -10,9 +10,9 @@ export type AppRouter = typeof appRouter;
 export type Feature = {
   name: string;
   audiences: Audience[];
-  client?: Audience[];
-  server?: Audience[];
-  progression?: number;
+  enabled: boolean;
+  progression: number | undefined;
+  groups: string[] | undefined;
 };
 
 export type Application = {
@@ -31,7 +31,7 @@ const AudienceSchema = z.boolean().or(z.string()).or(z.number());
 export const appRouter = trpc
   .router<Context>()
   .query("applications", {
-    async resolve({ ctx }): Promise<Application[]> {
+    async resolve({ ctx }) {
       const applications = ctx.applications.getAll();
       return applications.map((a) => a.exposeAdminResponse());
     },

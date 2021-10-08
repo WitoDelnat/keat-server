@@ -1,13 +1,13 @@
-import { isEqual, omit, toPairs } from "lodash";
+import { isEqual, isNumber, isString, omit, toPairs } from "lodash";
+import { DiscoveryCache } from "./DiscoveryCache";
 import { Feature } from "./Feature";
-import type { Application as AdminApplication } from "../../admin/index";
 
 export type Audience = boolean | number | string;
 
 export type ClientApp = {
   name: string;
   audiences: string[];
-  features: Record<string, Audience[]>;
+  features: string[];
 };
 
 export type ServerApp = {
@@ -18,41 +18,36 @@ export type ServerApp = {
 export class Application {
   public name: string;
   public server: ServerApp;
-  public client: ClientApp | undefined;
+  private discoveredGroups = new DiscoveryCache();
+
   private onChange?: (app: Application) => void;
 
   constructor(init: {
     name: string;
     server?: ServerApp;
-    client?: ClientApp;
     onChange?: (app: Application) => void;
   }) {
     this.name = init.name;
-    this.client = init.client;
     this.server = init.server ?? { name: init.name, features: {} };
     this.onChange = init.onChange;
   }
 
-  availableAudiences(): string[] {
-    return this.client?.audiences ?? [];
-  }
-
   getFeature(name: string): Feature | undefined {
-    const client = this.client?.features[name];
     const server = this.server?.features[name];
 
-    if (!client && !server) {
+    if (!server) {
       return undefined;
     }
 
-    return new Feature({ name, client, server });
+    return new Feature({ name, server });
   }
 
   registerClient(app: ClientApp) {
     if (app.name !== this.name) {
       throw new Error("INVALID_CLIENT_APP");
     }
-    this.client = app;
+    const groups = app.audiences.filter((a) => typeof a === "string");
+    this.discoveredGroups.putAll(groups);
   }
 
   registerServer(app: ServerApp) {
@@ -80,22 +75,19 @@ export class Application {
     this.onChange?.(this);
   }
 
-  exposeAdminResponse(): AdminApplication {
-    const features: Feature[] = toPairs({
-      ...this.server.features,
-      ...this.client?.features,
-    }).map(([name]) => {
-      const client = this.client?.features[name] ?? [];
-      const server = this.server.features[name] ?? [];
-      const audiences = server.length > 0 ? server : client;
-      const p = audiences.find((a) => typeof a === "number");
-      const progression = typeof p === "number" ? p : undefined;
-      return { name, audiences, server, client, progression };
+  exposeAdminResponse() {
+    const features = toPairs(this.server.features).map(([name, audiences]) => {
+      const enabled = audiences.filter((a) => a !== false).length !== 0;
+      const progression = audiences.find(isNumber);
+      const groups = audiences.filter(isString);
+      return { name, audiences, enabled, progression, groups };
     });
+
+    const audiences = this.discoveredGroups.getAll();
 
     return {
       name: this.name,
-      audiences: this.availableAudiences(),
+      audiences,
       features,
     };
   }

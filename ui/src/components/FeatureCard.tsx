@@ -10,9 +10,8 @@ import {
   SliderTrack,
   Text,
 } from '@chakra-ui/react';
-import { isNumber } from '@chakra-ui/utils';
 import React from 'react';
-import type { Feature } from '../utils/types';
+import type { Feature } from '../../../server/src/admin';
 
 type Props = {
   feature: Feature;
@@ -52,32 +51,36 @@ export function FeatureCard({ feature, onDelete, onEdit }: Props) {
       <Box px="3" mt="2">
         <Heading
           mt="2"
-          mb="2"
           letterSpacing="tight"
           textTransform="uppercase"
           fontSize="12px"
         >
-          Audiences
+          Groups
         </Heading>
 
-        <HStack>
-          {feature.audiences.filter((a) => a !== false).length === 0 ? (
-            <Badge variant="subtle" colorScheme="red">
-              Disabled
+        <HStack wrap="wrap">
+          {!feature.enabled ? (
+            <Badge my="2" variant="subtle" colorScheme="yellow">
+              Nobody
             </Badge>
+          ) : feature.audiences.some((a) => a === true) ||
+            feature.progression === 100 ? (
+            <Badge my="2" variant="subtle" colorScheme="yellow">
+              Everyone
+            </Badge>
+          ) : feature.groups === undefined || feature.groups.length === 0 ? (
+            <Text fontWeight="thin">No groups enabled</Text>
           ) : (
-            feature.audiences
-              .map((a) => (isNumber(a) ? 'rollout' : a))
-              .map((a) => (a === true ? 'enabled' : a))
-              .map((audience) => (
-                <Badge
-                  key={audience.toString()}
-                  variant="subtle"
-                  colorScheme="orange"
-                >
-                  {audience}
-                </Badge>
-              ))
+            feature.groups?.map((group) => (
+              <Badge
+                key={group.toString()}
+                variant="subtle"
+                colorScheme="orange"
+                my="2"
+              >
+                {group}
+              </Badge>
+            ))
           )}
         </HStack>
 
@@ -109,4 +112,24 @@ export function FeatureCard({ feature, onDelete, onEdit }: Props) {
       </Box>
     </Box>
   );
+}
+
+function determineAudiences(feature: Feature): string[] {
+  if (!feature.enabled) return ['Nobody'];
+
+  let audiences = [];
+
+  if (feature.progression) {
+    audiences.push('Rollout');
+  }
+
+  feature.groups?.forEach((group) => {
+    audiences.push(group);
+  });
+
+  if (audiences.length === 0) {
+    audiences.push('Everyone');
+  }
+
+  return audiences;
 }

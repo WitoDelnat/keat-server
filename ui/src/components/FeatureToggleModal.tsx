@@ -21,12 +21,13 @@ import { isNumber, isString } from 'lodash';
 import React, { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
+import type { Feature } from '../../../server/src/admin';
 import { trpc } from '../utils/trpc';
-import type { Feature } from '../utils/types';
 import { AudienceSelect } from './AudienceSelect';
 
 type Props = Omit<ModalProps, 'children'> & {
   application: string;
+  suggestedAudiences: string[];
   feature: Feature;
 };
 
@@ -34,16 +35,20 @@ const percentages = [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 100];
 
 type FormData = z.infer<typeof FormSchema>;
 const FormSchema = z.object({
-  enabled: z.boolean(),
   rollout: z.number().optional(),
   groups: z.array(z.string()),
 });
 
-export function ToggleModal({ application, feature, isOpen, onClose }: Props) {
+export function ToggleModal({
+  application,
+  suggestedAudiences,
+  feature,
+  isOpen,
+  onClose,
+}: Props) {
   const variant = useBreakpointValue({ base: 'full', md: 'md' });
   const { control, handleSubmit, setValue, watch } = useForm({
     defaultValues: {
-      enabled: !isDisabled(feature),
       rollout: feature.audiences.find(isNumber),
       groups: feature.audiences.filter(isString) ?? [],
     },
@@ -53,9 +58,9 @@ export function ToggleModal({ application, feature, isOpen, onClose }: Props) {
   const toggle = trpc.useMutation('toggleFeature');
 
   const onSubmit = useCallback(
-    async (form: FormData) => {
+    async ({ rollout, groups }: FormData) => {
       try {
-        const audiences = determineAudiences(form);
+        const audiences = rollout ? [rollout, ...groups] : groups;
 
         await toggle.mutateAsync({
           application,
@@ -79,27 +84,6 @@ export function ToggleModal({ application, feature, isOpen, onClose }: Props) {
           <ModalHeader>Toggle feature</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <FormControl display="flex" mb="3">
-              <FormLabel
-                letterSpacing="tight"
-                textTransform="uppercase"
-                fontSize="12px"
-              >
-                Enable
-              </FormLabel>
-              <Controller
-                name="enabled"
-                control={control}
-                render={({ field }) => (
-                  <Switch
-                    colorScheme="orange"
-                    isChecked={field.value}
-                    onChange={() => field.onChange(!field.value)}
-                  />
-                )}
-              />
-            </FormControl>
-
             <FormControl mb="3">
               <FormLabel
                 letterSpacing="tight"
@@ -114,6 +98,10 @@ export function ToggleModal({ application, feature, isOpen, onClose }: Props) {
                 control={control}
                 render={({ field }) => (
                   <AudienceSelect
+                    options={suggestedAudiences.map((value) => ({
+                      label: value,
+                      value,
+                    }))}
                     value={field.value.map((value) => ({
                       label: value,
                       value,
@@ -206,25 +194,4 @@ export function ToggleModal({ application, feature, isOpen, onClose }: Props) {
       </ModalContent>
     </Modal>
   );
-}
-
-function isDisabled(feature: Feature): boolean {
-  return (
-    feature.audiences.length === 0 ||
-    feature.audiences.some((a) => a === 'nobody' || false)
-  );
-}
-
-function determineAudiences({
-  enabled,
-  rollout,
-  groups,
-}: FormData): Array<boolean | number | string> {
-  if (!enabled) {
-    return [false];
-  }
-  if (!rollout && groups.length === 0) {
-    return [true];
-  }
-  return rollout ? [rollout, ...groups] : groups;
 }

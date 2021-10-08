@@ -13,12 +13,14 @@ import { ApplicationCreateModal } from '../components/ApplicationCreateModal';
 import { FeatureCard } from '../components/FeatureCard';
 import { ToggleModal } from '../components/FeatureToggleModal';
 import { trpc } from '../utils/trpc';
-import type { Application, Feature } from '../utils/types';
+import type { Application, Feature } from '../../../server/src/admin';
 
 export function IndexPage() {
-  const { isLoading, data: applications, refetch } = trpc.useQuery([
-    'applications',
-  ]);
+  const {
+    isLoading,
+    data: applications,
+    refetch,
+  } = trpc.useQuery(['applications']);
 
   const [feature, setFeature] = useState<Feature | null>(null);
   const [application, setApplication] = useState<Application | null>(null);
@@ -150,6 +152,7 @@ export function IndexPage() {
           feature={feature}
           isOpen={toggleDisclosure.isOpen}
           application={application.name}
+          suggestedAudiences={application.audiences}
           onClose={() => {
             setApplication(null);
             setFeature(null);

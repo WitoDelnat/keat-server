@@ -1,17 +1,10 @@
 import { FastifyInstance } from "fastify";
-import { isArray } from "lodash";
 import { z } from "zod";
 
 const BodySchema = z.object({
   name: z.string(),
   audiences: z.array(z.string()),
-  features: z.record(
-    z
-      .string()
-      .or(z.number())
-      .or(z.array(z.string().or(z.number())))
-      .transform((a) => (isArray(a) ? a : [a]))
-  ),
+  features: z.array(z.string()),
 });
 
 export async function register(fastify: FastifyInstance) {
@@ -28,6 +21,16 @@ export async function register(fastify: FastifyInstance) {
     const clientApp = BodySchema.parse(JSON.parse(request.body as string));
 
     fastify.applications.registerClient(clientApp);
+
+    reply.code(200).send();
+  });
+
+  fastify.get("/test", (_, reply) => {
+    fastify.applications.registerClient({
+      name: "demo",
+      audiences: ["staff", "stakeholders"],
+      features: ["search", "chatbot"],
+    });
 
     reply.code(200).send();
   });

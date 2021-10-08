@@ -2,7 +2,6 @@ import type { Audience } from "./Application";
 
 export class Feature {
   public name: string;
-  public client?: Audience[];
   public server?: Audience[];
 
   constructor(init: {
@@ -11,12 +10,11 @@ export class Feature {
     server?: Audience[];
   }) {
     this.name = init.name;
-    this.client = init.client;
     this.server = init.server;
   }
 
   get audiences(): Audience[] {
-    return this.server ?? this.client ?? [];
+    return this.server ?? [];
   }
 
   get progression(): number | undefined {
