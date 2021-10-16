@@ -94,7 +94,7 @@ spec:
         app: keat-server
     spec:
       containers:
-      - image: gcr.io/keatproj/keat-server:0.2.0-alpha.2
+      - image: gcr.io/keatproj/keat-server:0.2.0-alpha.3
         name: keat-server
         ports:
         - containerPort: 8080
