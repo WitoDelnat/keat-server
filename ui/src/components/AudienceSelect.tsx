@@ -22,7 +22,7 @@ export function AudienceSelect({ options, value, onChange }: Props) {
         options={options}
         closeMenuOnSelect={false}
         noOptionsMessage={() => <Text>No suggestions found</Text>}
-        placeholder="Select or create a group"
+        placeholder="Your awesome audiences"
         components={
           options.length === 0
             ? {

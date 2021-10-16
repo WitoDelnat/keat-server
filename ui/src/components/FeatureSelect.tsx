@@ -17,7 +17,7 @@ export function FeatureSelect({ isDisabled, options, value, onChange }: Props) {
         onChange={(option) => onChange(option?.value ?? null)}
         options={options.map((o) => ({ label: o, value: o }))}
         noOptionsMessage={() => <Text>No suggestions found</Text>}
-        placeholder="Select or create feature"
+        placeholder="Your awesome feature"
         components={
           options.length === 0
             ? {

@@ -23,9 +23,11 @@ const FormSchema = z.object({
   name: z.string().min(1),
 });
 
-type Props = Omit<ModalProps, 'children'>;
+type Props = Omit<ModalProps, 'children'> & {
+  onSuccess: (name: string) => void;
+};
 
-export function ApplicationCreateModal({ isOpen, onClose }: Props) {
+export function ApplicationCreateModal({ isOpen, onClose, onSuccess }: Props) {
   const { register, handleSubmit, reset } = useForm({
     defaultValues: {
       name: '',
@@ -38,10 +40,10 @@ export function ApplicationCreateModal({ isOpen, onClose }: Props) {
     async ({ name }: FormData) => {
       try {
         await createApplication.mutateAsync({ name });
+        onSuccess(name);
       } catch (err) {
         console.error(err);
       } finally {
-        onClose();
         reset();
       }
     },
@@ -69,17 +71,17 @@ export function ApplicationCreateModal({ isOpen, onClose }: Props) {
               onClick={onClose}
               _hover={{
                 backgroundColor: 'rgb(21, 21, 22)',
-                color: 'orange.700',
+                color: 'purple.700',
               }}
             >
               Close
             </Button>
             <Button
               type="submit"
-              backgroundColor="orange.100"
-              color="orange.700"
+              backgroundColor="purple.100"
+              color="purple.700"
               _hover={{
-                backgroundColor: 'orange.200',
+                backgroundColor: 'purple.200',
               }}
             >
               Create

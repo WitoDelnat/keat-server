@@ -1,154 +1,126 @@
-import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import {
   Badge,
   Box,
   Heading,
   HStack,
-  Slider,
-  SliderFilledTrack,
-  SliderThumb,
-  SliderTrack,
+  Image,
+  Square,
   Text,
+  useBreakpointValue,
+  VStack,
 } from '@chakra-ui/react';
 import { formatDistanceToNow } from 'date-fns';
-import React from 'react';
+import { generateFromString } from 'generate-avatar';
+import React, { useState } from 'react';
 import type { Feature } from '../../../server/src/admin';
 
 type Props = {
+  application: string;
   feature: Feature;
   onDelete: () => void;
   onEdit: () => void;
 };
 
-export function FeatureCard({ feature, onDelete, onEdit }: Props) {
+export function FeatureCard({ application, feature, onEdit, onDelete }: Props) {
+  const [showActions, setShowActions] = useState<boolean>(false);
+  const hideActions = useBreakpointValue({ base: false, sm: !showActions });
+
   return (
     <Box
-      minW="xs"
-      maxW="md"
+      display="absolute"
+      alignItems="flex-start"
       rounded="lg"
-      bgGradient="linear(to-b, #44403C, #292524)"
-      shadow="lg"
-      py="3"
+      bgGradient="linear(to-b, #28292c, rgba(39,40,43,0.82) )"
+      shadow="2xl"
+      p="6"
+      onMouseEnter={() => setShowActions(true)}
+      onMouseLeave={() => setShowActions(false)}
     >
-      <HStack
-        pb="2"
-        mb="3"
-        justifyContent="space-between"
-        alignItems="flex-start"
-        borderBottomWidth="thin"
-        borderColor="#6f6a64"
-        px="3"
-      >
-        <Heading fontSize="md" fontFamily="inter">
-          {feature.name}
-        </Heading>
+      <HStack justifyContent="space-between">
+        <HStack>
+          <Square size="8" overflow="hidden" rounded="md">
+            <Image
+              src={`data:image/svg+xml;utf8,${generateFromString(
+                feature.name,
+              )}`}
+            />
+          </Square>
 
-        <HStack spacing="3.5">
-          <DeleteIcon aria-label="delete" cursor="pointer" onClick={onDelete} />
-          <EditIcon aria-label="edit" cursor="pointer" onClick={onEdit} />
+          <VStack spacing="0" alignItems="flex-start">
+            <Heading fontSize="md" fontFamily="inter" fontWeight="700">
+              {feature.name}
+            </Heading>
+            <Text fontSize="sm" fontFamily="inter" fontWeight="400">
+              {application}
+            </Text>
+          </VStack>
+        </HStack>
+
+        <HStack hidden={hideActions} alignSelf="flex-start" spacing="5">
+          <Text
+            py="2"
+            fontSize="sm"
+            cursor="pointer"
+            onClick={onDelete}
+            color="blue.300"
+            _hover={{
+              textDecoration: 'underline',
+            }}
+          >
+            delete
+          </Text>
+
+          <Text
+            py="2"
+            fontSize="sm"
+            cursor="pointer"
+            onClick={onEdit}
+            color="blue.300"
+            _hover={{
+              textDecoration: 'underline',
+            }}
+          >
+            edit
+          </Text>
         </HStack>
       </HStack>
 
-      <Box px="3" mt="2">
-        <Heading
-          mt="2"
-          letterSpacing="tight"
-          textTransform="uppercase"
-          fontSize="12px"
-        >
-          Last seen
-        </Heading>
+      <HStack mt="3" wrap="wrap" h="48px">
+        {!feature.enabled ? (
+          <Text my="2">Disabled</Text>
+        ) : feature.audiences.some((a) => a === true) ||
+          feature.progression === 100 ? (
+          <Text my="2">Enabled for everyone</Text>
+        ) : (
+          <>
+            {feature.progression ? (
+              <Badge key={'rollout'} variant="subtle" colorScheme="purple">
+                {feature.progression}% rollout
+              </Badge>
+            ) : null}
 
-        <HStack>
-          <Badge my="2" variant="subtle" colorScheme="yellow">
-            {feature.lifecycle}
-          </Badge>
-          {feature.lastSeen ? (
-            <Text>{formatDistanceToNow(feature.lastSeen)}</Text>
-          ) : null}
-        </HStack>
-
-        <Heading
-          mt="2"
-          letterSpacing="tight"
-          textTransform="uppercase"
-          fontSize="12px"
-        >
-          Groups
-        </Heading>
-
-        <HStack wrap="wrap">
-          {!feature.enabled ? (
-            <Badge my="2" variant="subtle" colorScheme="yellow">
-              Nobody
-            </Badge>
-          ) : feature.audiences.some((a) => a === true) ||
-            feature.progression === 100 ? (
-            <Badge my="2" variant="subtle" colorScheme="yellow">
-              Everyone
-            </Badge>
-          ) : feature.groups === undefined || feature.groups.length === 0 ? (
-            <Text fontWeight="thin">No groups enabled</Text>
-          ) : (
-            feature.groups?.map((group) => (
+            {feature.groups?.map((group) => (
               <Badge
                 key={group.toString()}
                 variant="subtle"
-                colorScheme="orange"
-                my="2"
+                colorScheme="purple"
               >
                 {group}
               </Badge>
-            ))
-          )}
-        </HStack>
+            ))}
+          </>
+        )}
+      </HStack>
 
-        <HStack mt="2">
-          <Heading
-            letterSpacing="tight"
-            textTransform="uppercase"
-            fontSize="12px"
-          >
-            Progression
-          </Heading>
-          {feature.progression ? (
-            <Text fontSize="xs">({feature.progression}%)</Text>
-          ) : undefined}
-        </HStack>
-
-        <Box mb="2">
-          {feature.progression === undefined ? (
-            <Text fontWeight="thin">No rollout ongoing</Text>
-          ) : (
-            <Slider size="sm" value={feature.progression}>
-              <SliderTrack>
-                <SliderFilledTrack bgColor="orange.100" />
-              </SliderTrack>
-              <SliderThumb />
-            </Slider>
-          )}
-        </Box>
-      </Box>
+      <HStack mt="2">
+        {feature.lastSeen ? (
+          <Text fontSize="sm">
+            {`last seen ${formatDistanceToNow(feature.lastSeen)} ago`}
+          </Text>
+        ) : (
+          <Text fontSize="sm">{`never seen`}</Text>
+        )}
+      </HStack>
     </Box>
   );
-}
-
-function determineAudiences(feature: Feature): string[] {
-  if (!feature.enabled) return ['Nobody'];
-
-  let audiences = [];
-
-  if (feature.progression) {
-    audiences.push('Rollout');
-  }
-
-  feature.groups?.forEach((group) => {
-    audiences.push(group);
-  });
-
-  if (audiences.length === 0) {
-    audiences.push('Everyone');
-  }
-
-  return audiences;
 }

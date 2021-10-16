@@ -1020,6 +1020,11 @@
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.175.tgz#b78dfa959192b01fae0ad90e166478769b215f45"
   integrity sha512-XmdEOrKQ8a1Y/yxQFOMbC47G/V2VDO1GvMRnl4O75M4GW/abC5tnfzadQYkqEveqRM1dEJGFFegfPNA2vvx2iw==
 
+"@types/node@^13.13.1":
+  version "13.13.52"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-13.13.52.tgz#03c13be70b9031baaed79481c0c0cfb0045e53f7"
+  integrity sha512-s3nugnZumCC//n4moGGe6tkNMyYEdaDBitVjwPxXmR5lnMG5dHePinH2EdxkG3Rh1ghFHHixAG4NJhpJW1rthQ==
+
 "@types/parse-json@^4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@types/parse-json/-/parse-json-4.0.0.tgz#2f8bb441434d163b35fb8ffdccd7138927ffb8c0"
@@ -1431,6 +1436,13 @@ function-bind@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/function-bind/-/function-bind-1.1.1.tgz#a56899d3ea3c9bab874bb9773b7c5ede92f4895d"
   integrity sha512-yIovAzMX49sF8Yl58fSCWJ5svSLuaibPxXQJFLmBObTuCr0Mf1KiPopGM9NiFjiYBCbfaa2Fh6breQ6ANVTI0A==
+
+generate-avatar@^1.4.10:
+  version "1.4.10"
+  resolved "https://registry.yarnpkg.com/generate-avatar/-/generate-avatar-1.4.10.tgz#2d06b112419a835da7bf6cdc4fe6200b69b5c2de"
+  integrity sha512-HlVz3ZXTqz7F0sb3OoW8591SojdVtyyuqX6kCi/AnmEXH16MLmPRiChv2680E9WF39zl5nlHMrgZxlmqnTrzkQ==
+  dependencies:
+    "@types/node" "^13.13.1"
 
 gensync@^1.0.0-beta.2:
   version "1.0.0-beta.2"

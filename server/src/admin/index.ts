@@ -1,15 +1,21 @@
 import * as trpc from "@trpc/server";
-import { isNumber, isString } from "lodash";
+import { flatten, isNumber, isString } from "lodash";
 import { z } from "zod";
 import type {
-  Audience,
   Application as IApplication,
+  Audience,
 } from "../modules/applications/Application";
 import type { ApplicationService } from "../modules/applications/ApplicationService";
-import { Lifecycle } from "../modules/applications/Feature";
 import type { Synchronizer } from "../modules/backend/synchronizer";
 
 export type AppRouter = typeof appRouter;
+
+export type Application = {
+  name: string;
+  suggestedFeatures: string[];
+  suggestedAudiences: string[];
+  features: Feature[];
+};
 
 export type Feature = {
   name: string;
@@ -18,14 +24,6 @@ export type Feature = {
   progression: number | undefined;
   groups: string[] | undefined;
   lastSeen: number | undefined;
-  lifecycle: Lifecycle;
-};
-
-export type Application = {
-  name: string;
-  audiences: string[];
-  features: Feature[];
-  suggestedFeatures: string[];
 };
 
 export type Context = {
@@ -40,7 +38,8 @@ export const appRouter = trpc
   .query("applications", {
     async resolve({ ctx }): Promise<Application[]> {
       const applications = ctx.applications.getAll();
-      return applications.map(exposeApplication);
+      const apps = applications.map(exposeApplication);
+      return apps;
     },
   })
   .mutation("createApplication", {
@@ -97,8 +96,8 @@ function exposeApplication(application: IApplication): Application {
   for (const feature of application.features.values()) {
     const feat = {
       name: feature.name,
+      application: application.name,
       lastSeen: feature.lastSeen?.getTime(),
-      lifecycle: feature.lifecycle,
       audiences: feature.audiences,
       enabled: feature.audiences.filter((a) => a !== false).length !== 0,
       progression: feature.audiences.find(isNumber),
@@ -108,13 +107,10 @@ function exposeApplication(application: IApplication): Application {
     features.push(feat);
   }
 
-  const audiences = application.discoveredGroups.getAll();
-  const suggestedFeatures = application.discoveredFeatures.getAll();
-
   return {
     name: application.name,
-    audiences,
+    suggestedFeatures: application.discoveredFeatures.getAll(),
+    suggestedAudiences: application.discoveredGroups.getAll(),
     features,
-    suggestedFeatures,
   };
 }

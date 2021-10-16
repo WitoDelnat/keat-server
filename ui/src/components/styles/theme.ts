@@ -3,10 +3,12 @@ import { extendTheme } from '@chakra-ui/react';
 export type Theme = typeof theme;
 
 export const theme = extendTheme({
+  initialColorMode: 'dark',
+  useSystemColorMode: 'false',
   styles: {
     global: {
       'html, body': {
-        backgroundColor: 'rgb(15,15,16)',
+        backgroundColor: '#1c1d1f',
         color: '#E5E5E5',
       },
     },
@@ -21,20 +23,28 @@ export const theme = extendTheme({
         },
       },
     },
+    Menu: {
+      baseStyle: {
+        list: {
+          bgGradient: 'linear(to-b, #28292c, rgba(39,40,43,0.82) )',
+          borderWidth: 1,
+        },
+      },
+    },
     Checkbox: {
       defaultProps: {
-        colorScheme: 'orange',
+        colorScheme: 'purple',
       },
       baseStyle: {
         control: {
           _checked: {
-            bg: `orange.100`,
-            borderColor: `orange.100`,
-            color: 'orange.700',
+            bg: `purple.100`,
+            borderColor: `purple.100`,
+            color: 'purple.700',
 
             _hover: {
-              bg: `orange.200`,
-              borderColor: `orange.200`,
+              bg: `purple.200`,
+              borderColor: `purple.200`,
             },
 
             _disabled: {

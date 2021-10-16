@@ -1,4 +1,4 @@
-import { ChakraProvider } from '@chakra-ui/react';
+import { ChakraProvider, DarkMode } from '@chakra-ui/react';
 import { httpLink } from '@trpc/client/links/httpLink';
 import React, { ReactNode, useState } from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';

@@ -1,20 +1,32 @@
+import { SearchIcon, SettingsIcon, TriangleDownIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
   chakra,
   Circle,
-  Grid,
+  DarkMode,
   Heading,
   HStack,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  Link,
+  Menu,
+  MenuButton,
+  MenuDivider,
+  MenuItem,
+  MenuList,
+  SimpleGrid,
   Spinner,
+  Text,
   useDisclosure,
 } from '@chakra-ui/react';
-import { capitalize } from 'lodash';
-import React, { useCallback, useState } from 'react';
-import type { Application, Feature } from '../../../server/src/admin';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Feature } from '../../../server/src/admin';
 import { ApplicationCreateModal } from '../components/ApplicationCreateModal';
 import { FeatureCard } from '../components/FeatureCard';
 import { ToggleModal } from '../components/FeatureToggleModal';
+import { DividerIcon } from '../components/icons/DividerIcon';
 import { trpc } from '../utils/trpc';
 
 export function IndexPage() {
@@ -24,28 +36,31 @@ export function IndexPage() {
     refetch,
   } = trpc.useQuery(['applications']);
 
+  const [currentApp, setCurrentApp] = useState<string | undefined>(undefined);
+  const currentApplication = useMemo(() => {
+    return applications?.find((a) => a.name === currentApp);
+  }, [applications, currentApp]);
+
+  const [search, setSearch] = useState('');
+  const searchedFeatures = useMemo(() => {
+    return (
+      currentApplication?.features.filter((feature) =>
+        feature.name.includes(search),
+      ) ?? []
+    );
+  }, [currentApplication, search]);
+
+  useEffect(() => {
+    if (!currentApp && applications) {
+      setCurrentApp(applications[0].name);
+    }
+  }, [applications, setCurrentApp]);
+
   const [feature, setFeature] = useState<Feature | null>(null);
-  const [application, setApplication] = useState<Application | null>(null);
 
   const toggleDisclosure = useDisclosure();
-  const createApplicationDisclosure = useDisclosure();
-
-  const deleteApplication = trpc.useMutation('deleteApplication');
+  const newAppDisclosure = useDisclosure();
   const removeFeature = trpc.useMutation('removeFeature');
-
-  const onDelete = useCallback(
-    async (application: Application) => {
-      try {
-        await deleteApplication.mutateAsync({
-          name: application.name,
-        });
-        await refetch();
-      } catch (err) {
-        console.error(err, 'delete application failed');
-      }
-    },
-    [deleteApplication],
-  );
 
   const onDeleteFeature = useCallback(
     async (application: string, feature: string) => {
@@ -63,112 +78,144 @@ export function IndexPage() {
     [removeFeature],
   );
 
-  if (isLoading) {
+  if (isLoading || !applications || !currentApplication) {
     return <Spinner />;
   }
 
   return (
-    <Box as="main" mx="auto" maxW="3xl">
-      <HStack>
-        <Heading>Applications</Heading>
+    <Box as="main" mx="auto" maxW="5xl">
+      <HStack mx="6">
+        <Heading py="3">Keat</Heading>
+        <DividerIcon w="8" h="8" color="white" />
 
-        <Button
-          size="sm"
-          colorScheme="whiteAlpha"
-          onClick={createApplicationDisclosure.onOpen}
-        >
-          Create
-        </Button>
+        <DarkMode>
+          <Menu gutter={2}>
+            <MenuButton>
+              <HStack>
+                <Heading py="3">{currentApplication.name}</Heading>
+                <TriangleDownIcon pt="2" />
+              </HStack>
+            </MenuButton>
+            <MenuList>
+              {applications.map((app) => (
+                <MenuItem
+                  key={app.name}
+                  onClick={() => setCurrentApp(app.name)}
+                >
+                  {app.name}
+                </MenuItem>
+              ))}
+              <MenuDivider />
+              <MenuItem onClick={newAppDisclosure.onOpen}>
+                New application
+              </MenuItem>
+            </MenuList>
+          </Menu>
+        </DarkMode>
       </HStack>
 
-      {applications?.map((application) => {
-        return (
-          <section key={application.name}>
-            <HStack my="2">
-              <Heading>{capitalize(application.name)}</Heading>
+      <Box mx="6">
+        <HStack my="2">
+          <InputGroup>
+            <InputLeftElement
+              pointerEvents="none"
+              children={<SearchIcon color="gray.300" />}
+            />
+            <Input
+              type="tel"
+              placeholder="Search..."
+              onChange={(event) => {
+                setSearch(event.target.value);
+              }}
+            />
+          </InputGroup>
 
-              <Button
-                size="sm"
-                colorScheme="whiteAlpha"
-                onClick={() => onDelete(application)}
-              >
-                Delete
-              </Button>
+          <Button
+            mr="4"
+            height="38px"
+            size="sm"
+            colorScheme="purple"
+            px="6"
+            onClick={toggleDisclosure.onOpen}
+          >
+            <chakra.span>New Feature</chakra.span>
+            {currentApplication.suggestedFeatures.length > 0 ? (
+              <Box paddingLeft="3">
+                <Circle size="18px" background="purple.100" display="flex">
+                  <chakra.span color="purple.700" fontSize="xs">
+                    {currentApplication.suggestedFeatures.length}
+                  </chakra.span>
+                </Circle>
+              </Box>
+            ) : null}
+          </Button>
+          <Button
+            hidden={true}
+            variant="outline"
+            colorScheme="purple"
+            width="38px"
+            height="38px"
+          >
+            <SettingsIcon />
+          </Button>
+        </HStack>
 
-              <Button
-                size="sm"
-                colorScheme="whiteAlpha"
-                onClick={() => {
-                  setApplication(application);
-                  toggleDisclosure.onOpen();
-                }}
-              >
-                Add feature
-                {application.suggestedFeatures.length ? (
-                  <Box paddingLeft="3">
-                    <Circle size="18px" background="orange.100" display="flex">
-                      <chakra.span color="orange.700" fontSize="xs">
-                        {application.suggestedFeatures.length}
-                      </chakra.span>
-                    </Circle>
-                  </Box>
-                ) : null}
-              </Button>
-            </HStack>
+        {currentApplication.features.length === 0 ? (
+          <Box>
+            <Text maxW="lg" mt="7">
+              Start using the Keat client to automatically discover features or
+              add your first feature from within the dashboard by clicking{' '}
+              <Link color="purple.400" onClick={toggleDisclosure.onOpen}>
+                here
+              </Link>
+              .
+            </Text>
+          </Box>
+        ) : (
+          <SimpleGrid mt="7" columns={{ base: 1, sm: 2, lg: 3 }} gridGap="4">
+            {searchedFeatures.map((feature) => {
+              return (
+                <FeatureCard
+                  key={feature.name}
+                  application={currentApplication.name}
+                  feature={feature}
+                  onDelete={() => {
+                    onDeleteFeature(currentApplication.name, feature.name);
+                  }}
+                  onEdit={() => {
+                    setFeature(feature);
+                    toggleDisclosure.onOpen();
+                  }}
+                />
+              );
+            })}
+          </SimpleGrid>
+        )}
 
-            <Heading size="sm" my="2">
-              Manage
-            </Heading>
+        <ApplicationCreateModal
+          isOpen={newAppDisclosure.isOpen}
+          onClose={newAppDisclosure.onClose}
+          onSuccess={async (name) => {
+            newAppDisclosure.onClose();
+            await refetch();
+            setCurrentApp(name);
+          }}
+        />
 
-            <Grid
-              templateColumns="repeat(auto-fill, minmax(320px, 320px));"
-              justifyContent={{ base: 'center', sm: 'start' }}
-              gridGap="4"
-            >
-              {application.features.map((feature) => {
-                return (
-                  <FeatureCard
-                    key={feature.name}
-                    feature={feature}
-                    onDelete={() =>
-                      onDeleteFeature(application.name, feature.name)
-                    }
-                    onEdit={() => {
-                      setFeature(feature);
-                      setApplication(application);
-                      toggleDisclosure.onOpen();
-                    }}
-                  />
-                );
-              })}
-            </Grid>
-          </section>
-        );
-      })}
-
-      <ApplicationCreateModal
-        {...createApplicationDisclosure}
-        onClose={() => {
-          createApplicationDisclosure.onClose();
-          refetch();
-        }}
-      />
-
-      {application && (
         <ToggleModal
-          feature={feature}
           isOpen={toggleDisclosure.isOpen}
-          application={application.name}
-          suggestedFeatures={application.suggestedFeatures}
-          suggestedAudiences={application.audiences}
+          application={currentApplication.name}
+          feature={feature}
+          suggestedFeatures={currentApplication.suggestedFeatures}
+          suggestedAudiences={currentApplication.suggestedAudiences}
           onClose={() => {
-            setApplication(null);
             setFeature(null);
             toggleDisclosure.onClose();
+            console.log('refetch');
             refetch();
           }}
         />
-      )}
+      </Box>
     </Box>
   );
 }
