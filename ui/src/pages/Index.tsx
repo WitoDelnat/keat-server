@@ -1,120 +1,50 @@
-import { SearchIcon, SettingsIcon, TriangleDownIcon } from '@chakra-ui/icons';
+import { SearchIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
+  Center,
   chakra,
-  Circle,
-  DarkMode,
   Heading,
   HStack,
   Input,
   InputGroup,
   InputLeftElement,
-  Link,
-  Menu,
-  MenuButton,
-  MenuDivider,
-  MenuItem,
-  MenuList,
   SimpleGrid,
   Spinner,
   Text,
   useDisclosure,
 } from '@chakra-ui/react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Feature } from '../../../server/src/admin';
+import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { ApplicationCard } from '../components/ApplicationCard';
 import { ApplicationCreateModal } from '../components/ApplicationCreateModal';
-import { FeatureCard } from '../components/FeatureCard';
-import { ToggleModal } from '../components/FeatureToggleModal';
-import { DividerIcon } from '../components/icons/DividerIcon';
+import { AppMenu } from '../components/AppMenu';
 import { trpc } from '../utils/trpc';
 
 export function IndexPage() {
-  const {
-    isLoading,
-    data: applications,
-    refetch,
-  } = trpc.useQuery(['applications']);
+  const navigate = useNavigate();
+  const { isLoading, data: applications } = trpc.useQuery(['indexPage']);
+  console.log('test', applications);
 
-  const [currentApp, setCurrentApp] = useState<string | undefined>(undefined);
-  const currentApplication = useMemo(() => {
-    return applications?.find((a) => a.name === currentApp);
-  }, [applications, currentApp]);
-
+  const createDisclosure = useDisclosure();
   const [search, setSearch] = useState('');
-  const searchedFeatures = useMemo(() => {
+  const searchedApplications = useMemo(() => {
+    return applications?.filter((a) => a.name.includes(search)) ?? [];
+  }, [applications, search]);
+
+  if (isLoading || !applications) {
     return (
-      currentApplication?.features.filter((feature) =>
-        feature.name.includes(search),
-      ) ?? []
+      <Center w="100%" h="100vh">
+        <Spinner />
+      </Center>
     );
-  }, [currentApplication, search]);
-
-  useEffect(() => {
-    if (!currentApp && applications) {
-      setCurrentApp(applications[0].name);
-    }
-  }, [applications, setCurrentApp]);
-
-  const [feature, setFeature] = useState<Feature | null>(null);
-
-  const toggleDisclosure = useDisclosure();
-  const newAppDisclosure = useDisclosure();
-  const removeFeature = trpc.useMutation('removeFeature');
-
-  const onDeleteFeature = useCallback(
-    async (application: string, feature: string) => {
-      try {
-        await removeFeature.mutateAsync({
-          application,
-          name: feature,
-        });
-
-        await refetch();
-      } catch (err) {
-        console.error(err, 'remove feature failed');
-      }
-    },
-    [removeFeature],
-  );
-
-  if (isLoading || !applications || !currentApplication) {
-    return <Spinner />;
   }
 
   return (
     <Box as="main" mx="auto" maxW="5xl">
-      <HStack mx="6">
-        <Heading py="3">Keat</Heading>
-        <DividerIcon w="8" h="8" color="white" />
-
-        <DarkMode>
-          <Menu gutter={2}>
-            <MenuButton>
-              <HStack>
-                <Heading py="3">{currentApplication.name}</Heading>
-                <TriangleDownIcon pt="2" />
-              </HStack>
-            </MenuButton>
-            <MenuList>
-              {applications.map((app) => (
-                <MenuItem
-                  key={app.name}
-                  onClick={() => setCurrentApp(app.name)}
-                >
-                  {app.name}
-                </MenuItem>
-              ))}
-              <MenuDivider />
-              <MenuItem onClick={newAppDisclosure.onOpen}>
-                New application
-              </MenuItem>
-            </MenuList>
-          </Menu>
-        </DarkMode>
-      </HStack>
-
       <Box mx="6">
+        <AppMenu />
+
         <HStack my="2">
           <InputGroup>
             <InputLeftElement
@@ -122,7 +52,6 @@ export function IndexPage() {
               children={<SearchIcon color="gray.300" />}
             />
             <Input
-              type="tel"
               placeholder="Search..."
               onChange={(event) => {
                 setSearch(event.target.value);
@@ -136,55 +65,49 @@ export function IndexPage() {
             size="sm"
             colorScheme="purple"
             px="6"
-            onClick={toggleDisclosure.onOpen}
+            onClick={createDisclosure.onOpen}
           >
-            <chakra.span>New Feature</chakra.span>
-            {currentApplication.suggestedFeatures.length > 0 ? (
-              <Box paddingLeft="3">
-                <Circle size="18px" background="purple.100" display="flex">
-                  <chakra.span color="purple.700" fontSize="xs">
-                    {currentApplication.suggestedFeatures.length}
-                  </chakra.span>
-                </Circle>
-              </Box>
-            ) : null}
-          </Button>
-          <Button
-            hidden={true}
-            variant="outline"
-            colorScheme="purple"
-            width="38px"
-            height="38px"
-          >
-            <SettingsIcon />
+            <chakra.span>New Application</chakra.span>
           </Button>
         </HStack>
 
-        {currentApplication.features.length === 0 ? (
-          <Box>
-            <Text maxW="lg" mt="7">
-              Start using the Keat client to automatically discover features or
-              add your first feature from within the dashboard by clicking{' '}
-              <Link color="purple.400" onClick={toggleDisclosure.onOpen}>
-                here
-              </Link>
-              .
+        {applications.length === 0 ? (
+          <Center
+            flexDir="column"
+            mt="7"
+            p="12"
+            h="sm"
+            borderWidth="1px"
+            borderColor="white"
+            borderRadius="md"
+          >
+            <Text mt="4">Create your first application to get started.</Text>
+          </Center>
+        ) : searchedApplications.length === 0 ? (
+          <Center
+            flexDir="column"
+            mt="7"
+            p="12"
+            h="sm"
+            borderWidth="1px"
+            borderColor="white"
+            borderRadius="md"
+          >
+            <Heading size="md">No Applications found.</Heading>
+            <Text mt="4">
+              Your search for "{search}" did not match any applications.
             </Text>
-          </Box>
+          </Center>
         ) : (
           <SimpleGrid mt="7" columns={{ base: 1, sm: 2, lg: 3 }} gridGap="4">
-            {searchedFeatures.map((feature) => {
+            {searchedApplications.map(({ name, featureCount }) => {
               return (
-                <FeatureCard
-                  key={feature.name}
-                  application={currentApplication.name}
-                  feature={feature}
-                  onDelete={() => {
-                    onDeleteFeature(currentApplication.name, feature.name);
-                  }}
-                  onEdit={() => {
-                    setFeature(feature);
-                    toggleDisclosure.onOpen();
+                <ApplicationCard
+                  key={name}
+                  application={name}
+                  featureCount={featureCount}
+                  onClick={() => {
+                    navigate(`/${name.toLowerCase()}`);
                   }}
                 />
               );
@@ -193,26 +116,11 @@ export function IndexPage() {
         )}
 
         <ApplicationCreateModal
-          isOpen={newAppDisclosure.isOpen}
-          onClose={newAppDisclosure.onClose}
+          isOpen={createDisclosure.isOpen}
+          onClose={createDisclosure.onClose}
           onSuccess={async (name) => {
-            newAppDisclosure.onClose();
-            await refetch();
-            setCurrentApp(name);
-          }}
-        />
-
-        <ToggleModal
-          isOpen={toggleDisclosure.isOpen}
-          application={currentApplication.name}
-          feature={feature}
-          suggestedFeatures={currentApplication.suggestedFeatures}
-          suggestedAudiences={currentApplication.suggestedAudiences}
-          onClose={() => {
-            setFeature(null);
-            toggleDisclosure.onClose();
-            console.log('refetch');
-            refetch();
+            createDisclosure.onClose();
+            navigate(`/${name.toLowerCase()}`);
           }}
         />
       </Box>

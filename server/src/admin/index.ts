@@ -35,11 +35,27 @@ const AudienceSchema = z.boolean().or(z.string()).or(z.number());
 
 export const appRouter = trpc
   .router<Context>()
-  .query("applications", {
-    async resolve({ ctx }): Promise<Application[]> {
+  .query("indexPage", {
+    async resolve({ ctx }) {
       const applications = ctx.applications.getAll();
-      const apps = applications.map(exposeApplication);
-      return apps;
+      return applications.map((a) => {
+        return { name: a.name, featureCount: a.features.size };
+      });
+    },
+  })
+  .query("getApplicationNames", {
+    async resolve({ ctx }) {
+      const applications = ctx.applications.getAll();
+      return applications.map((a) => a.name);
+    },
+  })
+  .query("application", {
+    input: z.object({
+      name: z.string(),
+    }),
+    async resolve({ input, ctx }): Promise<Application> {
+      const application = ctx.applications.get(input.name);
+      return exposeApplication(application);
     },
   })
   .mutation("createApplication", {
