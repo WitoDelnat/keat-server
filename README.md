@@ -28,7 +28,7 @@ kind: Application
 metadata:
   name: demo
 spec:
-  search: "everyone"
+  search: 100
   chatbot: ["staff", 25]
 ```
 
@@ -40,4 +40,23 @@ kubectl apply -n keat -f ./application-demo.yaml
 
 That's it! You're all setup to [remotely configure your Keat client][keat-node].
 
-[keat-node]: https://github.com/WitoDelnat/keat-node#use-keat-server
+## Dashboard
+
+Keat-server comes with a dashboard to conveniently create and update Kubernetes resources. It comes with suggestions for features and groups by inspecting connecting clients.
+
+![Feature overview](./docs/feature-overview.png)
+![Feature create](./docs/feature-create.png)
+
+## How does it work?
+
+Keat-server is a simple remote configuration tool. The idea is to keep the data model trivial and store it within a Kubernetes resource to avoid the need of a database. Besides that, the API server's _watch_ capability in combination with server-send events allows us to easily stream changes in real-time.
+
+![Architecture](./docs/keat-server-architecture.png)
+
+Since configuration are plain Kubernetes resources, you can use any of the tools you are familiar with to build workflows that works for you. For instance, manage feature flags through kubectl, k9s or Argo CD. But you could also add a rollback mechanism by manipulating the Kubernetes resource based on Prometheus metrics.
+
+## Coming next
+
+The server is ready to be split into two pods, _keat-proxy_ and _keat-server_, to add the necessary security and scalability for production workloads.
+
+[keat-node]: https://github.com/WitoDelnat/keat
