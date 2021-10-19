@@ -1,6 +1,6 @@
-import type { Audience } from "./Application";
 import { differenceInDays } from "date-fns";
 import { logger } from "../../utils/logger";
+import type { Audience } from "./Application";
 
 export type Lifecycle = "unseen" | "fresh" | "stale" | "rotten";
 

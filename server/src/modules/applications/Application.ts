@@ -1,5 +1,4 @@
-import { isNumber, isString, toPairs } from "lodash";
-import { logger } from "../../utils/logger";
+import { toPairs } from "lodash";
 import { DiscoveryCache } from "./DiscoveryCache";
 import { Feature } from "./Feature";
 

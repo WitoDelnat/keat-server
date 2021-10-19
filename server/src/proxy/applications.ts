@@ -11,18 +11,11 @@ export async function register(fastify: FastifyInstance) {
   fastify.post("/applications", (request, reply) => {
     const clientApp = BodySchema.parse(JSON.parse(request.body as string));
 
-    fastify.applications.registerClient(clientApp);
-
-    reply.code(200).send();
-  });
-
-  fastify.get("/test", (_, reply) => {
-    fastify.applications.registerClient({
-      name: "demo",
-      audiences: ["staff", "stakeholders"],
-      features: ["search", "chatbot"],
-    });
-
-    reply.code(200).send();
+    try {
+      fastify.applications.registerClient(clientApp);
+      reply.code(200).send();
+    } catch {
+      reply.code(404).send("APPLICATION_NOT_FOUND");
+    }
   });
 }
