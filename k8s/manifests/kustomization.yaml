@@ -8,4 +8,4 @@ resources:
 images:
 - name: gcr.io/keatproj/keat-server
   newName: gcr.io/keatproj/keat-server
-  newTag: 0.2.0-alpha.4
+  newTag: 0.2.0
