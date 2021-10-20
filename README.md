@@ -23,7 +23,7 @@ Define your application:
 
 ```yaml
 # application-demo.yaml
-apiVersion: keat.io/v1alpha1
+apiVersion: keat.io/v1alpha2
 kind: Application
 metadata:
   name: demo
