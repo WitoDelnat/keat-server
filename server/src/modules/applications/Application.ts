@@ -1,4 +1,5 @@
 import { toPairs } from "lodash";
+import { logger } from "../../utils/logger";
 import { DiscoveryCache } from "./DiscoveryCache";
 import { Feature } from "./Feature";
 
@@ -41,8 +42,6 @@ export class Application {
   }
 
   registerClient(app: ClientApp) {
-    console.log("onregisterclient");
-
     if (app.name !== this.name) {
       throw new Error("INVALID_CLIENT_APP");
     }
@@ -64,7 +63,8 @@ export class Application {
     if (app.name !== this.name) {
       throw new Error("INVALID_SERVER_APP");
     }
-    if (this.containsUpdate(app)) {
+
+    if (!this.containsUpdate(app)) {
       return;
     }
 
@@ -76,18 +76,30 @@ export class Application {
     const pairs = toPairs(app.features);
 
     if (pairs.length !== this.features.size) {
-      return false; // more or fewer features
+      logger.debug(
+        { reason: "more or fewer features" },
+        "Resource contains updates"
+      );
+      return true;
     }
 
     for (const [name, audiences] of pairs) {
       const feature = this.getFeature(name);
       if (feature?.audiences.length === audiences.length) {
-        return true; // more or fewer audiences
+        logger.debug(
+          { reason: "more or fewer audiences" },
+          "Resource contains updates"
+        );
+        return true;
       }
 
       for (const audience of audiences) {
         if (!feature?.audiences.some((a) => a === audience)) {
-          return true; // some audience changed value
+          logger.debug(
+            { reason: "some audience changed value" },
+            "Resource contains updates"
+          );
+          return true;
         }
       }
     }
