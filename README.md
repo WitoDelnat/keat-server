@@ -28,7 +28,7 @@ kind: Application
 metadata:
   name: demo
 spec:
-  search: 100
+  search: [100]
   chatbot: ["staff", 25]
 ```
 
