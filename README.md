@@ -1,4 +1,4 @@
-# Keat
+# [alpha] Keat Server 
 
 Keat is the Kubernetes-native feature management tool.
 
