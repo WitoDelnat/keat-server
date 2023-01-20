@@ -6,7 +6,7 @@ metadata:
     app: keat-server
 spec:
   replicas: 1
-  revisionHistoryLimit: 6
+  revisionHistoryLimit: 2
   selector:
     matchLabels:
       app: keat-server
