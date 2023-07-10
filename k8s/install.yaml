@@ -93,22 +93,26 @@ spec:
       labels:
         app: keat-server
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
-      - image: gcr.io/keatproj/keat-server:0.2.0
-        name: keat-server
-        ports:
-        - containerPort: 8080
-          name: http-web
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: http-web
-          initialDelaySeconds: 15
-        resources:
-          limits:
-            cpu: 300m
-            memory: 400Mi
-          requests:
-            cpu: 150m
-            memory: 200Mi
+        - image: gcr.io/keatproj/keat-server:0.2.0
+          name: keat-server
+          ports:
+            - containerPort: 8080
+              name: http-web
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http-web
+            initialDelaySeconds: 15
+          resources:
+            limits:
+              cpu: 300m
+              memory: 400Mi
+            requests:
+              cpu: 150m
+              memory: 200Mi
       serviceAccountName: keat-server
