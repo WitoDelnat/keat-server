@@ -18,6 +18,8 @@ spec:
       serviceAccountName: keat-server
       containers:
         - name: keat-server
+          securityContext:
+            runAsNonRoot: true
           image: gcr.io/keatproj/keat-server
           ports:
             - name: http-web
