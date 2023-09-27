@@ -83,7 +83,7 @@ metadata:
     app: keat-server
   name: keat-server
 spec:
-  replicas: 1
+  replicas: 3
   revisionHistoryLimit: 2
   selector:
     matchLabels:
@@ -94,21 +94,21 @@ spec:
         app: keat-server
     spec:
       containers:
-      - image: gcr.io/keatproj/keat-server:0.2.0
-        name: keat-server
-        ports:
-        - containerPort: 8080
-          name: http-web
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: http-web
-          initialDelaySeconds: 15
-        resources:
-          limits:
-            cpu: 300m
-            memory: 400Mi
-          requests:
-            cpu: 150m
-            memory: 200Mi
+        - image: gcr.io/keatproj/keat-server:0.2.0
+          name: keat-server
+          ports:
+            - containerPort: 8080
+              name: http-web
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http-web
+            initialDelaySeconds: 15
+          resources:
+            limits:
+              cpu: 300m
+              memory: 400Mi
+            requests:
+              cpu: 150m
+              memory: 200Mi
       serviceAccountName: keat-server
